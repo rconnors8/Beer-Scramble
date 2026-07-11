@@ -1,82 +1,108 @@
-# Beer-Scramble 🍺⛳
+# Golf Beer League 🍺⛳
 
-Live scoring for a golf scramble. Every group plays holes **1 → 18 in order**,
-tracks its beers, and shows up on a shared leaderboard in real time.
+Live scoring for a golf beer league. Friends form 2-person teams, play 18 holes
+in order, and share one pool of **30 beers** per round. Every beer logged
+**deducts a point** from the team's stroke total.
 
-There's **no custom backend**: the browser talks directly to Supabase, and every
-rule is enforced by Postgres (constraints + Row Level Security), not by app code
-someone could bypass.
+> **Adjusted score = total strokes − total beers (max 30). Lowest wins.**
 
-## How it works
+One person per team ("team rep") runs the app for their team, logging both scores
+and beers. Anyone with the link can watch the leaderboard without signing in.
 
-- **Sign in with Google** (Supabase Auth). Sessions persist, so you stay signed
-  in on your device — no PINs, no passwords.
-- **Sequential play, submit any time.** The scorecard highlights your current
-  hole (lowest one not yet entered), but you can submit any hole whenever you get
-  to it — handy for entering a hole late.
-- **Scores are final.** Submitting a hole shows one confirm dialog
-  (`Hole 7: score of 5 — Confirm?`). After that it's locked forever — there is
-  no edit for anyone, including the match creator. Enforced server-side: `scores`
-  is insert-only under RLS with a `unique (team_id, hole)` constraint.
-- **30-beer hard cap.** A `CHECK (beer_count <= 30)` constraint plus a guard
-  trigger enforce the ceiling in the database; the button just disables at 30.
-- **Team names can collide** — no uniqueness check.
-- **"F" when done.** A team shows `F` on the leaderboard once it submits hole 18.
-  There's no manual "match over" toggle.
+## What's enforced (and where)
 
-## Prerequisites
+Nothing important is guarded only in the UI — it's all in the database:
 
-1. **A Supabase project** (free tier is fine).
-2. **A Google OAuth client** — Google sign-in requires this, and it's the one
-   external setup step you can't skip:
-   - In [Google Cloud Console](https://console.cloud.google.com/) → *APIs &
-     Services → Credentials*, create an **OAuth 2.0 Client ID** (type: *Web
-     application*).
-   - Add your Supabase auth callback as an authorized redirect URI:
-     `https://<YOUR-PROJECT>.supabase.co/auth/v1/callback`.
-   - Copy the **Client ID** and **Client secret** into Supabase → *Authentication
-     → Providers → Google*, and enable the provider.
-   - Under Supabase → *Authentication → URL Configuration*, set the **Site URL**
-     (and add any deploy/localhost URLs to *Redirect URLs*) so the OAuth
-     redirect lands back on the app.
+- **Scores are permanent.** `hole_scores` has a `unique (team_id, hole_number)`
+  constraint and **no** update/delete policy, so a submitted hole can never be
+  changed or removed. The confirmation modal is the only safeguard.
+- **30-beer hard cap** — enforced atomically by the `log_beer` RPC, not just a
+  disabled button.
+- **8 teams per match max** — enforced atomically by the `join_team` RPC, which
+  also returns your existing team instead of creating a duplicate.
+- **Auth** is 100% Supabase Auth + Google OAuth. No passwords, PINs, or custom
+  credential logic. Sessions persist until you sign out.
+- **Reads are public** (spectators + leaderboard use the anon key); **writes** are
+  gated by RLS keyed on `auth.uid()`.
+- No `active`/`completed` flag exists on a match — a team shows **"F"** once it
+  has all 18 holes in, and the match is implicitly over when every team is "F".
+
+The one action the spec's SQL didn't cover directly is the beer **Undo**. Since
+`beer_logs` has no delete policy, undo goes through a small `undo_last_beer`
+`security definer` RPC that removes the caller's most recent beer within the
+~8-second toast window. Beers are explicitly undoable; only *scores* are immutable.
+
+## Tech stack
+
+- **Next.js** (App Router) + **TypeScript** + **Tailwind CSS**, mobile-first.
+- **Supabase** (hosted Postgres) — DB, auth, and realtime.
+- Client-side writes via the Supabase JS SDK; atomic caps via Postgres RPCs.
+- **Supabase Realtime** on the leaderboard and team dashboard, with a 15s polling
+  fallback.
+
+## Routes
+
+| Route | Who | Purpose |
+|-------|-----|---------|
+| `/` | anyone | Sign in, create a match, or open a code |
+| `/create` | signed in | Create a match, get the join + leaderboard links |
+| `/join/[match_code]` | signed in | Set up your team (or jump to it if you already have one) |
+| `/team/[match_code]` | team owner | Scorecard + beer logging |
+| `/match/[match_code]` | public | Live leaderboard |
 
 ## Setup
 
+### 1. Create the Supabase project & run the migration
+
+1. Create a project at [supabase.com](https://supabase.com) (free tier is fine).
+2. Open the **SQL editor** and run the contents of
+   [`supabase/migration.sql`](supabase/migration.sql). This creates the tables,
+   RLS policies, and the `join_team` / `log_beer` / `undo_last_beer` RPCs.
+
+### 2. Set up Google OAuth (required manual step)
+
+Google sign-in needs an OAuth client — this is not automatic:
+
+1. In [Google Cloud Console](https://console.cloud.google.com/) → *APIs &
+   Services → Credentials*, create an **OAuth 2.0 Client ID** (type: *Web
+   application*).
+2. Add this authorized redirect URI:
+   `https://<YOUR-PROJECT-REF>.supabase.co/auth/v1/callback`
+3. In Supabase → *Authentication → Providers → Google*, enable Google and paste
+   in the **Client ID** and **Client secret**.
+4. In Supabase → *Authentication → URL Configuration*, set the **Site URL** to
+   your app's URL and add your local (`http://localhost:3000`) and Vercel URLs to
+   **Redirect URLs**.
+
+### 3. Environment variables
+
 ```bash
-# 1. Install dependencies
-npm install
-
-# 2. Configure environment
 cp .env.example .env.local
-#    then fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-#    (Supabase → Project Settings → API)
+```
 
-# 3. Create the database schema
-#    Paste supabase/schema.sql into the Supabase SQL editor and run it
-#    (or: supabase db push)
+Fill in from Supabase → *Project Settings → API*:
 
-# 4. Run it
+```
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR-ANON-PUBLIC-KEY
+```
+
+### 4. Run locally
+
+```bash
+npm install
 npm run dev
+# http://localhost:3000
 ```
 
-Build for production with `npm run build` (outputs static files in `dist/` — host
-anywhere: Netlify, Vercel, GitHub Pages, etc.).
+### 5. Deploy to Vercel
 
-## Project layout
+1. Push this repo and import it in [Vercel](https://vercel.com).
+2. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` as project
+   environment variables.
+3. Deploy, then add the Vercel URL to Supabase's **Redirect URLs** (step 2.4).
 
-```
-supabase/schema.sql   Tables, constraints, RLS policies, guard trigger (the rules)
-src/lib/supabase.ts   Supabase client (persisted sessions)
-src/lib/useAuth.ts    Google sign-in / sign-out hook
-src/views/SignIn.tsx  Google sign-in screen
-src/views/Home.tsx    Create / join a match
-src/views/Match.tsx   Scorecard, beer counter, live leaderboard
-```
+## Out of scope for v1
 
-## Notes
-
-- **A confirmed fat-finger is permanent.** With no edit path anywhere, a wrong
-  score you confirm is final by design. The confirm dialog is the only safeguard.
-- Anyone in the match can record scores for any team (one phone per group is the
-  expected use). Tighten the `teams`/`scores` RLS policies if you need per-team
-  ownership.
+Score editing/correction (deliberate), passwords/PINs, GPS/course mapping, shot
+tracking, handicaps, season history, and payments.

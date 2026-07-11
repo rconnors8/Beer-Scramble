@@ -1,8 +1,10 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { supabase } from './supabase';
+import { supabase } from './supabaseClient';
 
-export function useAuth() {
+export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -22,13 +24,16 @@ export function useAuth() {
     };
   }, []);
 
-  const signInWithGoogle = () =>
-    supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin + window.location.pathname },
-    });
+  return { session, loading };
+}
 
-  const signOut = () => supabase.auth.signOut();
+export function signInWithGoogle() {
+  return supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.href },
+  });
+}
 
-  return { session, loading, signInWithGoogle, signOut };
+export function signOut() {
+  return supabase.auth.signOut();
 }
