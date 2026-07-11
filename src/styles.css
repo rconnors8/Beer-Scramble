@@ -1,0 +1,222 @@
+:root {
+  --green-900: #0b3d2e;
+  --green-700: #14624a;
+  --green-500: #1f8a63;
+  --gold: #e8b64c;
+  --gold-dark: #c8952f;
+  --bg: #f4f6f2;
+  --card: #ffffff;
+  --ink: #16231d;
+  --muted: #6b7d73;
+  --line: #e2e8e2;
+  --danger: #c0392b;
+  --radius: 14px;
+  --shadow: 0 1px 3px rgba(11, 61, 46, 0.1), 0 6px 20px rgba(11, 61, 46, 0.06);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2 { margin: 0 0 4px; }
+h2 { font-size: 1.15rem; }
+
+.muted { color: var(--muted); }
+.mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, 'SF Mono', Menlo, monospace; }
+.fine-print { font-size: 0.8rem; }
+.error { color: var(--danger); font-size: 0.9rem; margin: 4px 0 0; }
+
+.center {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+/* ---- App shell ---- */
+.app { max-width: 640px; margin: 0 auto; padding-bottom: 48px; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--green-900);
+  color: #fff;
+}
+.brand { color: #fff; text-decoration: none; font-weight: 700; }
+.content { padding: 16px; }
+
+.stack { display: flex; flex-direction: column; gap: 16px; }
+
+/* ---- Cards ---- */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.row { display: flex; gap: 8px; }
+.row .input { flex: 1; }
+
+/* ---- Controls ---- */
+.input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 1rem;
+  background: #fff;
+  color: var(--ink);
+}
+.input:focus { outline: 2px solid var(--green-500); border-color: transparent; }
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 11px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: var(--green-700);
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) { background: var(--green-500); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-ghost { background: transparent; color: var(--green-700); border: 1px solid var(--green-700); }
+.btn-ghost:hover:not(:disabled) { background: rgba(31, 138, 99, 0.08); color: var(--green-700); }
+.btn-small { padding: 8px 10px; font-size: 0.85rem; }
+.btn-beer { background: var(--gold); color: #3a2a05; }
+.btn-beer:hover:not(:disabled) { background: var(--gold-dark); }
+
+.link {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  opacity: 0.85;
+  padding: 0;
+}
+
+.chip {
+  display: inline-block;
+  background: var(--green-900);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 1px;
+}
+
+/* ---- Sign in ---- */
+.signin-card {
+  background: var(--card);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 36px 28px;
+  text-align: center;
+  max-width: 360px;
+}
+.signin-logo { font-size: 3rem; }
+.btn-google { width: 100%; margin-top: 16px; background: #fff; color: #3c4043; border: 1px solid var(--line); }
+.btn-google:hover:not(:disabled) { background: #f7f7f7; color: #3c4043; }
+
+/* ---- Lists ---- */
+.list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  text-decoration: none;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.list-item:hover { border-color: var(--green-500); }
+.list-item-title { font-weight: 600; }
+.as-button { }
+
+/* ---- Match ---- */
+.match-head { display: flex; align-items: center; justify-content: space-between; }
+.scorecard-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+
+.beer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0 18px;
+  padding: 12px 14px;
+  background: rgba(232, 182, 76, 0.14);
+  border: 1px solid rgba(232, 182, 76, 0.5);
+  border-radius: 12px;
+}
+.beer-count { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---- Holes ---- */
+.holes { display: flex; flex-direction: column; gap: 6px; }
+.hole {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.hole.current { border-color: var(--green-500); box-shadow: 0 0 0 2px rgba(31, 138, 99, 0.15); }
+.hole.locked { background: #f6f8f6; }
+.hole-num { font-weight: 700; color: var(--muted); text-align: center; }
+.hole-score { font-weight: 700; font-size: 1.1rem; }
+.hole-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 1rem;
+  text-align: center;
+}
+.hole-input:focus { outline: 2px solid var(--green-500); border-color: transparent; }
+
+/* ---- Leaderboard ---- */
+.board { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.board th, .board td { padding: 9px 8px; text-align: left; border-bottom: 1px solid var(--line); }
+.board th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.board .num { text-align: right; font-variant-numeric: tabular-nums; }
+.board tr.mine td { background: rgba(31, 138, 99, 0.08); font-weight: 600; }
+
+/* ---- Dark mode ---- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1512;
+    --card: #16211c;
+    --ink: #e8efe9;
+    --muted: #93a89b;
+    --line: #274035;
+  }
+  .input, .btn-google { background: #0f1a15; color: var(--ink); }
+  .btn-google:hover:not(:disabled) { background: #16241d; color: var(--ink); }
+  .hole.locked { background: #12241b; }
+  .list-item { background: #0f1a15; }
+}
