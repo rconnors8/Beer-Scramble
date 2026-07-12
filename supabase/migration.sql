@@ -64,18 +64,27 @@ alter table teams       enable row level security;
 alter table hole_scores enable row level security;
 alter table beer_logs   enable row level security;
 
+-- Policies use drop-if-exists + create so this whole migration is rerunnable
+-- (Postgres has no "create policy if not exists").
+
 -- Public reads on everything (spectators + leaderboard).
+drop policy if exists matches_select     on matches;
+drop policy if exists teams_select       on teams;
+drop policy if exists hole_scores_select on hole_scores;
+drop policy if exists beer_logs_select   on beer_logs;
 create policy matches_select     on matches     for select using (true);
 create policy teams_select       on teams       for select using (true);
 create policy hole_scores_select on hole_scores for select using (true);
 create policy beer_logs_select   on beer_logs   for select using (true);
 
 -- matches: authenticated users may create a match they own. No update/delete.
+drop policy if exists matches_insert on matches;
 create policy matches_insert on matches
   for insert to authenticated
   with check (owner_user_id = auth.uid());
 
 -- hole_scores: insert only for a hole belonging to a team you own. No update/delete.
+drop policy if exists hole_scores_insert on hole_scores;
 create policy hole_scores_insert on hole_scores
   for insert to authenticated
   with check (
@@ -201,6 +210,28 @@ grant execute on function undo_last_beer(uuid)          to authenticated;
 -- ---------------------------------------------------------------------------
 -- Realtime (leaderboard + team dashboard subscribe to these)
 -- ---------------------------------------------------------------------------
-alter publication supabase_realtime add table hole_scores;
-alter publication supabase_realtime add table beer_logs;
-alter publication supabase_realtime add table teams;
+-- Guarded so reruns don't fail with "table is already member of publication".
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'hole_scores'
+  ) then
+    alter publication supabase_realtime add table hole_scores;
+  end if;
+
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'beer_logs'
+  ) then
+    alter publication supabase_realtime add table beer_logs;
+  end if;
+
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'teams'
+  ) then
+    alter publication supabase_realtime add table teams;
+  end if;
+end
+$$;
