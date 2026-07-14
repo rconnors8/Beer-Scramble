@@ -16,7 +16,7 @@ import {
   type Match,
   type Team,
 } from '@/lib/types';
-import { formatToPar, parForHole, teeById } from '@/lib/course';
+import { NINES, formatToPar, holeInfo, isNineId, nextNine, parForHole, totalPar } from '@/lib/course';
 
 export default function TeamPage({ params }: { params: { match_code: string } }) {
   const code = params.match_code.toUpperCase();
@@ -118,7 +118,7 @@ export default function TeamPage({ params }: { params: { match_code: string } })
       team_id: team.id,
       hole_number: openHole,
       strokes: draftStrokes,
-      par: parForHole(team.tee, openHole), // lock in this hole's par with the score
+      par: parForHole(team.start_nine, openHole), // lock in this hole's par with the score
     });
     setSubmitBusy(false);
     if (error) {
@@ -175,9 +175,10 @@ export default function TeamPage({ params }: { params: { match_code: string } })
   const gross = scores.reduce((sum, s) => sum + s.strokes, 0);
   const beerCount = beers.length;
   const adjusted = gross - beerCount;
-  const tee = teeById(team.tee);
-  const parPlayed = scores.reduce((sum, s) => sum + (parForHole(team.tee, s.hole_number) ?? 0), 0);
-  const toPar = tee ? gross - parPlayed : null;
+  const startNine = isNineId(team.start_nine) ? NINES[team.start_nine] : null;
+  const secondNine = isNineId(team.start_nine) ? NINES[nextNine(team.start_nine)] : null;
+  const parPlayed = scores.reduce((sum, s) => sum + (parForHole(team.start_nine, s.hole_number) ?? 0), 0);
+  const toPar = startNine ? gross - parPlayed : null;
 
   return (
     <main className="flex min-h-dvh flex-col gap-4 p-4 pb-24">
@@ -188,13 +189,19 @@ export default function TeamPage({ params }: { params: { match_code: string } })
           <p className="text-sm text-slate-600">
             {match.name} · <span className="font-mono">{match.match_code}</span>
           </p>
-          {tee && (
+          {startNine && secondNine && (
             <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
-              <span
-                className="inline-block h-3 w-3 rounded-full border border-black/10"
-                style={{ backgroundColor: tee.dot }}
-              />
-              {tee.label} tees · par {tee.ninePar.reduce((a, b) => a + b, 0) * 2}
+              <span className="flex items-center">
+                <span
+                  className="inline-block h-3 w-3 rounded-full border border-black/10"
+                  style={{ backgroundColor: startNine.dot }}
+                />
+                <span
+                  className="-ml-0.5 inline-block h-3 w-3 rounded-full border border-black/10"
+                  style={{ backgroundColor: secondNine.dot }}
+                />
+              </span>
+              {startNine.label} → {secondNine.label} · par {totalPar(team.start_nine)}
             </p>
           )}
         </div>
@@ -218,18 +225,29 @@ export default function TeamPage({ params }: { params: { match_code: string } })
         </h2>
         <div className="grid grid-cols-3 gap-2">
           {HOLES.map((hole) => {
-            const holePar = parForHole(team.tee, hole);
+            const info = holeInfo(team.start_nine, hole);
+            const holePar = info ? info.nine.par[info.local - 1] : null;
+            const label = info ? (
+              <span className="flex items-center justify-center gap-1 text-xs text-slate-500">
+                <span
+                  className="inline-block h-2 w-2 rounded-full border border-black/10"
+                  style={{ backgroundColor: info.nine.dot }}
+                />
+                {info.nine.label} {info.local}
+                {holePar != null && <span className="text-slate-400">· par {holePar}</span>}
+              </span>
+            ) : (
+              <span className="text-xs text-slate-500">Hole {hole}</span>
+            );
             const s = submittedHoles.get(hole);
             if (s) {
               const d = holePar != null ? s.strokes - holePar : null;
               return (
                 <div
                   key={hole}
-                  className="flex flex-col items-center rounded-xl border border-turf-100 bg-turf-50 py-3"
+                  className="flex flex-col items-center gap-0.5 rounded-xl border border-turf-100 bg-turf-50 py-3"
                 >
-                  <span className="text-xs text-slate-500">
-                    Hole {hole}{holePar != null && <span className="text-slate-400"> · par {holePar}</span>}
-                  </span>
+                  {label}
                   <span className="text-2xl font-bold text-turf-700">{s.strokes}</span>
                   {d != null && (
                     <span className="text-[11px] font-semibold text-slate-400">{formatToPar(d)}</span>
@@ -244,11 +262,9 @@ export default function TeamPage({ params }: { params: { match_code: string } })
                   setOpenHole(hole);
                   setDraftStrokes(null);
                 }}
-                className="flex flex-col items-center rounded-xl border border-dashed border-slate-300 bg-white py-3 active:scale-95"
+                className="flex flex-col items-center gap-0.5 rounded-xl border border-dashed border-slate-300 bg-white py-3 active:scale-95"
               >
-                <span className="text-xs text-slate-500">
-                  Hole {hole}{holePar != null && <span className="text-slate-400"> · par {holePar}</span>}
-                </span>
+                {label}
                 <span className="text-2xl font-bold text-slate-300">–</span>
               </button>
             );
@@ -267,11 +283,14 @@ export default function TeamPage({ params }: { params: { match_code: string } })
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-800">
                 Hole {openHole}
-                {parForHole(team.tee, openHole) != null && (
-                  <span className="ml-2 text-sm font-medium text-slate-400">
-                    par {parForHole(team.tee, openHole)}
-                  </span>
-                )}
+                {(() => {
+                  const info = holeInfo(team.start_nine, openHole);
+                  return info ? (
+                    <span className="ml-2 text-sm font-medium text-slate-400">
+                      {info.nine.label} {info.local} · par {info.nine.par[info.local - 1]}
+                    </span>
+                  ) : null;
+                })()}
               </h3>
               <button onClick={closeEntry} className="text-sm text-slate-500 underline">
                 Cancel

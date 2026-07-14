@@ -19,7 +19,7 @@ export type Team = {
   match_id: string;
   team_name: string;
   members_label: string | null;
-  tee: string | null; // 'red' | 'blue' | 'white' | 'green' — sets par
+  start_nine: string | null; // 'red' | 'blue' | 'white' | 'green' — the nine you start on
   owner_user_id: string;
   created_at: string;
 };

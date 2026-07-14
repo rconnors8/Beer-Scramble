@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import { useSession } from '@/lib/useSession';
 import { SignInButton } from '@/components/SignInButton';
-import { COURSE_NAME, TEES, type TeeId } from '@/lib/course';
+import { COURSE_NAME, NINES, START_OPTIONS, nextNine, type NineId } from '@/lib/course';
 import type { Match } from '@/lib/types';
 
 export default function JoinPage({ params }: { params: { match_code: string } }) {
@@ -18,7 +18,7 @@ export default function JoinPage({ params }: { params: { match_code: string } })
   const [checking, setChecking] = useState(true);
   const [teamName, setTeamName] = useState('');
   const [membersLabel, setMembersLabel] = useState('');
-  const [tee, setTee] = useState<TeeId>('white');
+  const [startNine, setStartNine] = useState<NineId>('green');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -61,7 +61,7 @@ export default function JoinPage({ params }: { params: { match_code: string } })
     const { error } = await supabase.rpc('join_team', {
       p_match_id: match.id,
       p_team_name: teamName.trim(),
-      p_tee: tee,
+      p_start_nine: startNine,
       p_members_label: membersLabel.trim() || null,
     });
     setBusy(false);
@@ -126,36 +126,47 @@ export default function JoinPage({ params }: { params: { match_code: string } })
         className="rounded-lg border border-slate-300 px-4 py-4 text-lg"
       />
 
-      <label className="text-sm font-medium text-slate-600">Tees — sets your par</label>
+      <label className="text-sm font-medium text-slate-600">
+        Starting nine — you&apos;ll play it, then the next color
+      </label>
       <div className="grid grid-cols-2 gap-2">
-        {TEES.map((t) => {
-          const active = tee === t.id;
-          const par = t.ninePar.reduce((a, b) => a + b, 0) * 2;
+        {START_OPTIONS.map((id) => {
+          const nine = NINES[id];
+          const next = NINES[nextNine(id)];
+          const active = startNine === id;
           return (
             <button
-              key={t.id}
+              key={id}
               type="button"
-              onClick={() => setTee(t.id)}
+              onClick={() => setStartNine(id)}
               className={
-                'flex items-center gap-2 rounded-xl border px-4 py-3 text-left active:scale-[0.99] ' +
+                'flex items-center gap-2 rounded-xl border px-3 py-3 text-left active:scale-[0.99] ' +
                 (active
                   ? 'border-turf-600 bg-turf-50 ring-2 ring-turf-500'
                   : 'border-slate-300 bg-white')
               }
             >
-              <span
-                className="h-4 w-4 shrink-0 rounded-full border border-black/10"
-                style={{ backgroundColor: t.dot }}
-              />
+              <span className="flex shrink-0 items-center">
+                <span
+                  className="h-4 w-4 rounded-full border border-black/10"
+                  style={{ backgroundColor: nine.dot }}
+                />
+                <span
+                  className="-ml-1 h-4 w-4 rounded-full border border-black/10"
+                  style={{ backgroundColor: next.dot }}
+                />
+              </span>
               <span className="flex flex-col leading-tight">
-                <span className="font-semibold text-slate-800">{t.label}</span>
-                <span className="text-xs text-slate-500 tabular-nums">Par {par}</span>
+                <span className="font-semibold text-slate-800">{nine.label}</span>
+                <span className="text-xs text-slate-500">then {next.label}</span>
               </span>
             </button>
           );
         })}
       </div>
-      <p className="text-xs text-slate-400">{COURSE_NAME} · 9 holes played twice.</p>
+      <p className="text-xs text-slate-400">
+        {COURSE_NAME} · two nines, par 72. Loop: Green → Red → Blue → White → Green.
+      </p>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import { buildStanding, sortStandings, type TeamStanding } from '@/lib/scoring';
-import { formatToPar, teeById } from '@/lib/course';
+import { NINES, formatToPar, isNineId } from '@/lib/course';
 import type { BeerLog, HoleScore, Match, Team } from '@/lib/types';
 
 export default function LeaderboardPage({ params }: { params: { match_code: string } }) {
@@ -118,17 +118,17 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
             </thead>
             <tbody>
               {rows.map((r, i) => {
-                const tee = teeById(r.teeId);
+                const nine = isNineId(r.startNine) ? NINES[r.startNine] : null;
                 return (
                   <tr key={r.teamId} className="border-b border-slate-50 last:border-0">
                     <td className="px-2 py-3 font-semibold text-slate-400">{i + 1}</td>
                     <td className="px-1.5 py-3">
                       <div className="flex items-center gap-1.5">
-                        {tee && (
+                        {nine && (
                           <span
                             className="inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-black/10"
-                            style={{ backgroundColor: tee.dot }}
-                            title={`${tee.label} tees`}
+                            style={{ backgroundColor: nine.dot }}
+                            title={`Started on ${nine.label}`}
                           />
                         )}
                         <span className="font-semibold text-slate-800">{r.teamName}</span>

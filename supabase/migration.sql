@@ -55,14 +55,27 @@ create index if not exists teams_match_idx on teams (match_id);
 create index if not exists hole_scores_team_idx on hole_scores (team_id);
 create index if not exists beer_logs_team_idx on beer_logs (team_id);
 
--- Tee (color course) sets par. Added via alter so the migration stays rerunnable.
+-- Starting nine (color) — sets which two nines you play (start + next in the
+-- loop) and therefore par. Added via alter so the migration stays rerunnable.
 -- hole_scores.par already exists and stores each hole's par at submit time.
-alter table teams add column if not exists tee text;
+-- Rename the earlier `tee` column to `start_nine` if it's still around.
 do $$
 begin
-  if not exists (select 1 from pg_constraint where conname = 'teams_tee_check') then
-    alter table teams add constraint teams_tee_check
-      check (tee is null or tee in ('red', 'blue', 'white', 'green'));
+  if exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'teams' and column_name = 'tee')
+     and not exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'teams' and column_name = 'start_nine') then
+    alter table teams rename column tee to start_nine;
+  end if;
+end
+$$;
+alter table teams add column if not exists start_nine text;
+alter table teams drop constraint if exists teams_tee_check;
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'teams_start_nine_check') then
+    alter table teams add constraint teams_start_nine_check
+      check (start_nine is null or start_nine in ('red', 'blue', 'white', 'green'));
   end if;
 end
 $$;
@@ -111,16 +124,18 @@ create policy hole_scores_insert on hole_scores
 -- through the SECURITY DEFINER RPCs below, which enforce the caps atomically.
 
 -- ---------------------------------------------------------------------------
--- RPC: join_team — enforces the 8-team cap, dedupes by owner, records the tee
+-- RPC: join_team — enforces the 8-team cap, dedupes by owner, records the
+--                  starting nine
 -- ---------------------------------------------------------------------------
 
--- Dropped first because we're changing the argument signature (adding p_tee).
+-- Dropped first because earlier versions had different argument signatures.
 drop function if exists join_team(uuid, text, text);
+drop function if exists join_team(uuid, text, text, text);
 
 create or replace function join_team(
   p_match_id uuid,
   p_team_name text,
-  p_tee text default 'white',
+  p_start_nine text default 'green',
   p_members_label text default null
 )
 returns uuid
@@ -136,8 +151,8 @@ begin
     raise exception 'must be signed in';
   end if;
 
-  if p_tee is null or p_tee not in ('red', 'blue', 'white', 'green') then
-    raise exception 'invalid tee';
+  if p_start_nine is null or p_start_nine not in ('red', 'blue', 'white', 'green') then
+    raise exception 'invalid starting nine';
   end if;
 
   -- If this account already owns a team in this match, return it (no duplicate).
@@ -153,8 +168,8 @@ begin
     raise exception 'match is full';
   end if;
 
-  insert into teams (match_id, team_name, members_label, owner_user_id, tee)
-  values (p_match_id, p_team_name, p_members_label, auth.uid(), p_tee)
+  insert into teams (match_id, team_name, members_label, owner_user_id, start_nine)
+  values (p_match_id, p_team_name, p_members_label, auth.uid(), p_start_nine)
   returning id into v_team_id;
 
   return v_team_id;

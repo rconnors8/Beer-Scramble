@@ -26,12 +26,15 @@ Nothing important is guarded only in the UI — it's all in the database:
   gated by RLS keyed on `auth.uid()`.
 - No `active`/`completed` flag exists on a match — a team shows **"F"** once it
   has all 18 holes in, and the match is implicitly over when every team is "F".
-- **Tees & par.** Each team picks a tee (color course) when they join, which
-  sets their par; scores are then shown relative to par (**E / +3 / −2**) live on
-  the leaderboard so every team sees who's over/under. Course/par data lives in
-  `src/lib/course.ts` (currently Colonie Town Golf Course — a 9-hole course whose
-  nine is played twice for an 18-hole, par-72 round). The beer-**adjusted** score
-  (gross − beers) is still what wins the league.
+- **Starting nine & par.** Colonie Town has four 9-hole loops (Red / Blue /
+  White / Green — 36 holes total, each nine par 36). An 18-hole round is a
+  **starting nine + the next color in the loop**, because the course loops back:
+  **Green → Red → Blue → White → Green**. So starting on Green plays Green then
+  Red; starting on Blue plays Blue then White. Each team picks their starting
+  nine when they join; scores are shown relative to par (**E / +3 / −2**) live on
+  the leaderboard so every team sees who's over/under. Course data lives in
+  `src/lib/course.ts`. The beer-**adjusted** score (gross − beers) still wins the
+  league.
 
 The one action the spec's SQL didn't cover directly is the beer **Undo**. Since
 `beer_logs` has no delete policy, undo goes through a small `undo_last_beer`

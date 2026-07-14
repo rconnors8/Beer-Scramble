@@ -16,11 +16,11 @@ function scores(teamId: string, count: number, strokesEach = 4): HoleScore[] {
   }));
 }
 
-const team = (id: string, name = id, tee: string | null = null) => ({
+const team = (id: string, name = id, start_nine: string | null = null) => ({
   id,
   team_name: name,
   members_label: null,
-  tee,
+  start_nine,
 });
 
 describe('buildStanding', () => {
@@ -65,28 +65,37 @@ describe('buildStanding', () => {
     expect(s.adjustedScore).toBe(-7);
   });
 
-  it('leaves toPar null when no tee is chosen', () => {
+  it('leaves toPar null when no starting nine is chosen', () => {
     const s = buildStanding(team('a'), scores('a', 9, 4), 0);
-    expect(s.teeId).toBeNull();
+    expect(s.startNine).toBeNull();
     expect(s.toPar).toBeNull();
   });
 
-  it('computes toPar vs the chosen tee over holes played', () => {
-    // Red front nine par = [5,4,4,3,5,3,4,4,4] = 36. Play 9 holes at 4 each = 36 strokes.
-    const s = buildStanding(team('a', 'a', 'red'), scores('a', 9, 4), 0);
+  it('computes toPar over the starting nine (par 36) at even', () => {
+    // Green front nine par = [4,5,3,4,5,4,4,3,4] = 36. Play 9 at 4 each = 36.
+    const s = buildStanding(team('a', 'a', 'green'), scores('a', 9, 4), 0);
     expect(s.grossStrokes).toBe(36);
-    expect(s.toPar).toBe(0); // even
+    expect(s.toPar).toBe(0);
+  });
+
+  it('spans both nines: start Green then Red for 18 holes', () => {
+    // Green nine par 36 + Red nine par 36 = 72. Play all 18 at par-even is hard to
+    // fake with flat strokes, so check the par total via a level round: 4 each.
+    const s = buildStanding(team('a', 'a', 'green'), scores('a', 18, 4), 0);
+    expect(s.grossStrokes).toBe(72);
+    // par over 18 = 72, so toPar = 72 - 72 = 0.
+    expect(s.toPar).toBe(0);
   });
 
   it('reports over par correctly on a partial round', () => {
-    // Red holes 1–3 par 5,4,4 = 13. Bogey each (6,5,5) = 16 -> +3.
+    // Green holes 1–3 par 4,5,3 = 12. Strokes 6,5,5 = 16 -> +4.
     const three: HoleScore[] = [
-      { id: 'x1', team_id: 'a', hole_number: 1, strokes: 6, par: 5, submitted_at: '' },
-      { id: 'x2', team_id: 'a', hole_number: 2, strokes: 5, par: 4, submitted_at: '' },
-      { id: 'x3', team_id: 'a', hole_number: 3, strokes: 5, par: 4, submitted_at: '' },
+      { id: 'x1', team_id: 'a', hole_number: 1, strokes: 6, par: 4, submitted_at: '' },
+      { id: 'x2', team_id: 'a', hole_number: 2, strokes: 5, par: 5, submitted_at: '' },
+      { id: 'x3', team_id: 'a', hole_number: 3, strokes: 5, par: 3, submitted_at: '' },
     ];
-    const s = buildStanding(team('a', 'a', 'red'), three, 0);
-    expect(s.toPar).toBe(3);
+    const s = buildStanding(team('a', 'a', 'green'), three, 0);
+    expect(s.toPar).toBe(4);
   });
 });
 
@@ -94,7 +103,7 @@ describe('sortStandings', () => {
   const standing = (over: Partial<TeamStanding> & { teamId: string }): TeamStanding => ({
     teamName: over.teamId,
     membersLabel: null,
-    teeId: null,
+    startNine: null,
     holesPlayed: 18,
     finished: true,
     status: 'F',
