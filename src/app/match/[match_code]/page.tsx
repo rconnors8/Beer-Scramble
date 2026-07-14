@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import { buildStanding, sortStandings, type TeamStanding } from '@/lib/scoring';
+import { formatToPar, teeById } from '@/lib/course';
 import type { BeerLog, HoleScore, Match, Team } from '@/lib/types';
 
 export default function LeaderboardPage({ params }: { params: { match_code: string } }) {
@@ -106,49 +107,74 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-3 py-3 text-left">#</th>
-                <th className="px-2 py-3 text-left">Team</th>
-                <th className="px-2 py-3 text-center">Thru</th>
-                <th className="px-2 py-3 text-right">Gross</th>
-                <th className="px-2 py-3 text-right">🍺</th>
-                <th className="px-3 py-3 text-right">Adj</th>
+                <th className="px-2 py-3 text-left">#</th>
+                <th className="px-1.5 py-3 text-left">Team</th>
+                <th className="px-1.5 py-3 text-center">Thru</th>
+                <th className="px-1.5 py-3 text-center">Par</th>
+                <th className="px-1.5 py-3 text-right">Gross</th>
+                <th className="px-1.5 py-3 text-right">🍺</th>
+                <th className="px-2 py-3 text-right">Adj</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((r, i) => (
-                <tr key={r.teamId} className="border-b border-slate-50 last:border-0">
-                  <td className="px-3 py-3 font-semibold text-slate-400">{i + 1}</td>
-                  <td className="px-2 py-3">
-                    <div className="font-semibold text-slate-800">{r.teamName}</div>
-                    {r.membersLabel && (
-                      <div className="text-xs text-slate-400">{r.membersLabel}</div>
-                    )}
-                  </td>
-                  <td className="px-2 py-3 text-center">
-                    {r.finished ? (
-                      <span className="font-bold text-turf-700">F</span>
-                    ) : (
-                      <span className="text-slate-500">{r.holesPlayed}</span>
-                    )}
-                  </td>
-                  <td className="px-2 py-3 text-right tabular-nums text-slate-600">
-                    {r.grossStrokes}
-                  </td>
-                  <td className="px-2 py-3 text-right tabular-nums text-beer-500">
-                    −{r.beers}
-                  </td>
-                  <td className="px-3 py-3 text-right text-lg font-extrabold tabular-nums text-turf-700">
-                    {r.adjustedScore}
-                  </td>
-                </tr>
-              ))}
+              {rows.map((r, i) => {
+                const tee = teeById(r.teeId);
+                return (
+                  <tr key={r.teamId} className="border-b border-slate-50 last:border-0">
+                    <td className="px-2 py-3 font-semibold text-slate-400">{i + 1}</td>
+                    <td className="px-1.5 py-3">
+                      <div className="flex items-center gap-1.5">
+                        {tee && (
+                          <span
+                            className="inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-black/10"
+                            style={{ backgroundColor: tee.dot }}
+                            title={`${tee.label} tees`}
+                          />
+                        )}
+                        <span className="font-semibold text-slate-800">{r.teamName}</span>
+                      </div>
+                      {r.membersLabel && (
+                        <div className="pl-4 text-xs text-slate-400">{r.membersLabel}</div>
+                      )}
+                    </td>
+                    <td className="px-1.5 py-3 text-center">
+                      {r.finished ? (
+                        <span className="font-bold text-turf-700">F</span>
+                      ) : (
+                        <span className="text-slate-500">{r.holesPlayed}</span>
+                      )}
+                    </td>
+                    <td
+                      className={
+                        'px-1.5 py-3 text-center font-bold tabular-nums ' +
+                        (r.toPar == null
+                          ? 'text-slate-300'
+                          : r.toPar <= 0
+                            ? 'text-turf-600'
+                            : 'text-slate-600')
+                      }
+                    >
+                      {formatToPar(r.toPar)}
+                    </td>
+                    <td className="px-1.5 py-3 text-right tabular-nums text-slate-600">
+                      {r.grossStrokes}
+                    </td>
+                    <td className="px-1.5 py-3 text-right tabular-nums text-beer-500">
+                      −{r.beers}
+                    </td>
+                    <td className="px-2 py-3 text-right text-lg font-extrabold tabular-nums text-turf-700">
+                      {r.adjustedScore}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
 
       <p className="text-center text-xs text-slate-400">
-        Adjusted = gross strokes − beers (max 30). Lowest wins.
+        Par = over/under par so far · Adjusted = gross − beers (max 30), lowest wins.
       </p>
       <Link href="/" className="text-center text-sm text-turf-600 underline">
         Home

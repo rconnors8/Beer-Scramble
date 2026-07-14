@@ -55,6 +55,18 @@ create index if not exists teams_match_idx on teams (match_id);
 create index if not exists hole_scores_team_idx on hole_scores (team_id);
 create index if not exists beer_logs_team_idx on beer_logs (team_id);
 
+-- Tee (color course) sets par. Added via alter so the migration stays rerunnable.
+-- hole_scores.par already exists and stores each hole's par at submit time.
+alter table teams add column if not exists tee text;
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'teams_tee_check') then
+    alter table teams add constraint teams_tee_check
+      check (tee is null or tee in ('red', 'blue', 'white', 'green'));
+  end if;
+end
+$$;
+
 -- ---------------------------------------------------------------------------
 -- Row Level Security
 -- ---------------------------------------------------------------------------
@@ -99,12 +111,16 @@ create policy hole_scores_insert on hole_scores
 -- through the SECURITY DEFINER RPCs below, which enforce the caps atomically.
 
 -- ---------------------------------------------------------------------------
--- RPC: join_team — enforces the 8-team cap, dedupes by owner
+-- RPC: join_team — enforces the 8-team cap, dedupes by owner, records the tee
 -- ---------------------------------------------------------------------------
+
+-- Dropped first because we're changing the argument signature (adding p_tee).
+drop function if exists join_team(uuid, text, text);
 
 create or replace function join_team(
   p_match_id uuid,
   p_team_name text,
+  p_tee text default 'white',
   p_members_label text default null
 )
 returns uuid
@@ -120,6 +136,10 @@ begin
     raise exception 'must be signed in';
   end if;
 
+  if p_tee is null or p_tee not in ('red', 'blue', 'white', 'green') then
+    raise exception 'invalid tee';
+  end if;
+
   -- If this account already owns a team in this match, return it (no duplicate).
   select id into v_team_id
   from teams
@@ -133,8 +153,8 @@ begin
     raise exception 'match is full';
   end if;
 
-  insert into teams (match_id, team_name, members_label, owner_user_id)
-  values (p_match_id, p_team_name, p_members_label, auth.uid())
+  insert into teams (match_id, team_name, members_label, owner_user_id, tee)
+  values (p_match_id, p_team_name, p_members_label, auth.uid(), p_tee)
   returning id into v_team_id;
 
   return v_team_id;
@@ -203,7 +223,7 @@ begin
 end;
 $$;
 
-grant execute on function join_team(uuid, text, text)   to authenticated;
+grant execute on function join_team(uuid, text, text, text) to authenticated;
 grant execute on function log_beer(uuid)                to authenticated;
 grant execute on function undo_last_beer(uuid)          to authenticated;
 

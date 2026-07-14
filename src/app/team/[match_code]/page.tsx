@@ -16,6 +16,7 @@ import {
   type Match,
   type Team,
 } from '@/lib/types';
+import { formatToPar, parForHole, teeById } from '@/lib/course';
 
 export default function TeamPage({ params }: { params: { match_code: string } }) {
   const code = params.match_code.toUpperCase();
@@ -117,6 +118,7 @@ export default function TeamPage({ params }: { params: { match_code: string } })
       team_id: team.id,
       hole_number: openHole,
       strokes: draftStrokes,
+      par: parForHole(team.tee, openHole), // lock in this hole's par with the score
     });
     setSubmitBusy(false);
     if (error) {
@@ -173,6 +175,9 @@ export default function TeamPage({ params }: { params: { match_code: string } })
   const gross = scores.reduce((sum, s) => sum + s.strokes, 0);
   const beerCount = beers.length;
   const adjusted = gross - beerCount;
+  const tee = teeById(team.tee);
+  const parPlayed = scores.reduce((sum, s) => sum + (parForHole(team.tee, s.hole_number) ?? 0), 0);
+  const toPar = tee ? gross - parPlayed : null;
 
   return (
     <main className="flex min-h-dvh flex-col gap-4 p-4 pb-24">
@@ -183,16 +188,26 @@ export default function TeamPage({ params }: { params: { match_code: string } })
           <p className="text-sm text-slate-600">
             {match.name} · <span className="font-mono">{match.match_code}</span>
           </p>
+          {tee && (
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
+              <span
+                className="inline-block h-3 w-3 rounded-full border border-black/10"
+                style={{ backgroundColor: tee.dot }}
+              />
+              {tee.label} tees · par {tee.ninePar.reduce((a, b) => a + b, 0) * 2}
+            </p>
+          )}
         </div>
         <button onClick={() => signOut()} className="text-xs text-slate-400 underline">
           Sign out
         </button>
       </header>
 
-      <div className="grid grid-cols-3 gap-2 rounded-2xl bg-white p-3 text-center shadow-sm">
+      <div className="grid grid-cols-4 gap-2 rounded-2xl bg-white p-3 text-center shadow-sm">
         <Stat label="Status" value={finished ? 'F' : `Thru ${holesPlayed}`} />
+        <Stat label="To Par" value={formatToPar(toPar)} highlight />
         <Stat label="Gross" value={String(gross)} />
-        <Stat label="Adjusted" value={String(adjusted)} highlight />
+        <Stat label="Adj" value={String(adjusted)} />
       </div>
 
       <BeerButton teamId={team.id} count={beerCount} onChange={() => void refresh(team.id)} />
@@ -203,15 +218,22 @@ export default function TeamPage({ params }: { params: { match_code: string } })
         </h2>
         <div className="grid grid-cols-3 gap-2">
           {HOLES.map((hole) => {
+            const holePar = parForHole(team.tee, hole);
             const s = submittedHoles.get(hole);
             if (s) {
+              const d = holePar != null ? s.strokes - holePar : null;
               return (
                 <div
                   key={hole}
                   className="flex flex-col items-center rounded-xl border border-turf-100 bg-turf-50 py-3"
                 >
-                  <span className="text-xs text-slate-500">Hole {hole}</span>
+                  <span className="text-xs text-slate-500">
+                    Hole {hole}{holePar != null && <span className="text-slate-400"> · par {holePar}</span>}
+                  </span>
                   <span className="text-2xl font-bold text-turf-700">{s.strokes}</span>
+                  {d != null && (
+                    <span className="text-[11px] font-semibold text-slate-400">{formatToPar(d)}</span>
+                  )}
                 </div>
               );
             }
@@ -224,7 +246,9 @@ export default function TeamPage({ params }: { params: { match_code: string } })
                 }}
                 className="flex flex-col items-center rounded-xl border border-dashed border-slate-300 bg-white py-3 active:scale-95"
               >
-                <span className="text-xs text-slate-500">Hole {hole}</span>
+                <span className="text-xs text-slate-500">
+                  Hole {hole}{holePar != null && <span className="text-slate-400"> · par {holePar}</span>}
+                </span>
                 <span className="text-2xl font-bold text-slate-300">–</span>
               </button>
             );
@@ -241,7 +265,14 @@ export default function TeamPage({ params }: { params: { match_code: string } })
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
           <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">Hole {openHole}</h3>
+              <h3 className="text-lg font-bold text-slate-800">
+                Hole {openHole}
+                {parForHole(team.tee, openHole) != null && (
+                  <span className="ml-2 text-sm font-medium text-slate-400">
+                    par {parForHole(team.tee, openHole)}
+                  </span>
+                )}
+              </h3>
               <button onClick={closeEntry} className="text-sm text-slate-500 underline">
                 Cancel
               </button>
@@ -288,8 +319,8 @@ function Stat({
 }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <p className={'text-2xl font-extrabold ' + (highlight ? 'text-turf-700' : 'text-slate-800')}>
+      <p className="text-[10px] uppercase tracking-wide text-slate-400">{label}</p>
+      <p className={'text-xl font-extrabold ' + (highlight ? 'text-turf-700' : 'text-slate-800')}>
         {value}
       </p>
     </div>
