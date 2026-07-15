@@ -104,12 +104,25 @@ npm run dev
 # http://localhost:3000
 ```
 
-### 5. Deploy to Vercel
+### 5. Deploy to Netlify
 
-1. Push this repo and import it in [Vercel](https://vercel.com).
-2. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` as project
-   environment variables.
-3. Deploy, then add the Vercel URL to Supabase's **Redirect URLs** (step 2.4).
+The repo includes `netlify.toml`; Netlify's Next.js runtime handles the SSR
+routes automatically.
+
+1. In [Netlify](https://app.netlify.com) → **Add new site → Import an existing
+   project** → connect GitHub → pick this repo.
+2. Build settings are read from `netlify.toml` (build `npm run build`, publish
+   `.next`). Just confirm them.
+3. Under **Environment variables**, add `NEXT_PUBLIC_SUPABASE_URL` and
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` (same values as `.env.local`).
+4. Deploy. Then take the live URL (e.g. `https://your-site.netlify.app`) and add
+   it to Supabase → **Authentication → URL Configuration** as the **Site URL**
+   and in **Redirect URLs**, so Google sign-in returns to the deployed app. (The
+   Google Cloud redirect URI stays the Supabase `/auth/v1/callback` — it doesn't
+   change per frontend.)
+
+> Prefer Vercel? It also works with zero config — import the repo, add the two
+> env vars, deploy, and add the Vercel URL to Supabase's URL configuration.
 
 ## Out of scope for v1
 
