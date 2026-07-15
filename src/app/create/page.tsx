@@ -68,7 +68,11 @@ export default function CreatePage() {
   };
 
   if (created) {
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    // Prefer the canonical public URL for share links, so they're always public
+    // even if a match is created from localhost. Falls back to the current origin.
+    const origin =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (typeof window !== 'undefined' ? window.location.origin : '');
     return (
       <main className="flex min-h-dvh flex-col justify-center gap-5 p-6">
         <div className="glass px-6 py-7 text-center">
