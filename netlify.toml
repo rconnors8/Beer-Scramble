@@ -1,0 +1,12 @@
+# Netlify build config for the Next.js app.
+# The official Next.js runtime handles SSR/dynamic routes as functions.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
