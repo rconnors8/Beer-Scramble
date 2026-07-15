@@ -1,9 +1,10 @@
 # Netlify build config for the Next.js app.
-# The official Next.js runtime handles SSR/dynamic routes as functions.
+# The official Next.js runtime (@netlify/plugin-nextjs) manages the publish
+# directory and wires SSR/dynamic routes as functions — so we intentionally do
+# NOT set `publish` here (setting it to .next serves raw build output and 404s).
 
 [build]
   command = "npm run build"
-  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
