@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { playClink } from '@/lib/celebrate';
 import { MAX_BEERS } from '@/lib/types';
 
 /**
@@ -42,6 +43,7 @@ export function BeerButton({
       setError(error.message.includes('cap') ? 'Beer cap reached (30).' : error.message);
       return;
     }
+    playClink();
     onChange();
     setShowUndo(true);
     if (undoTimer.current) clearTimeout(undoTimer.current);
@@ -68,11 +70,8 @@ export function BeerButton({
         }
       >
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-3">
-            <span className="text-2xl">🍺</span>
-            <span className="font-display text-xl font-bold">
-              {atCap ? 'Cap reached' : 'Log a beer'}
-            </span>
+          <span className="font-display text-xl font-extrabold tracking-tight">
+            {atCap ? 'CAP REACHED' : 'LOG A BEER BUD'}
           </span>
           <span
             className={
@@ -97,7 +96,7 @@ export function BeerButton({
       {showUndo && (
         <div className="fixed inset-x-0 bottom-5 z-40 flex justify-center px-4">
           <div className="flex w-full max-w-md animate-sheet-up items-center justify-between rounded-2xl border border-white/[0.08] bg-surface-2/95 px-4 py-3 text-ink shadow-glass backdrop-blur-xl">
-            <span className="font-medium">Beer logged 🍺</span>
+            <span className="font-medium">Beer logged</span>
             <button onClick={undo} className="font-bold text-amber underline-offset-2 hover:underline">
               Undo
             </button>

@@ -15,9 +15,9 @@ export default function LandingPage() {
         <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] text-3xl shadow-glass">
           ⛳
         </div>
-        <p className="eyebrow">Colonie Town · Beer League</p>
+        <p className="eyebrow">PGCC · Colonie Town</p>
         <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight text-ink">
-          Golf Beer League
+          PGCC Beer League
         </h1>
         <p className="mt-2 text-ink-dim">
           Strokes minus beers. <span className="text-mint">Lowest wins.</span>

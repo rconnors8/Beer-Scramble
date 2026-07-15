@@ -49,10 +49,22 @@ const config: Config = {
           '0%': { transform: 'translateY(12px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
+        celebrate: {
+          '0%': { transform: 'scale(0.5)', opacity: '0' },
+          '18%': { transform: 'scale(1.12)', opacity: '1' },
+          '70%': { transform: 'scale(1)', opacity: '1' },
+          '100%': { transform: 'scale(1)', opacity: '0' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
       },
       animation: {
         'pop-in': 'pop-in 0.18s ease-out',
         'sheet-up': 'sheet-up 0.22s cubic-bezier(0.22,1,0.36,1)',
+        celebrate: 'celebrate 1.7s ease-out forwards',
+        'fade-in': 'fade-in 0.2s ease-out',
       },
     },
   },

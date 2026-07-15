@@ -17,8 +17,8 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: 'Golf Beer League',
-  description: 'Live scoring for a golf beer league — strokes minus beers wins.',
+  title: 'PGCC Golf Beer League',
+  description: 'PGCC live scoring — strokes minus beers wins.',
 };
 
 export const viewport: Viewport = {

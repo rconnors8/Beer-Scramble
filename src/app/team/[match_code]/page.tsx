@@ -16,7 +16,9 @@ import {
   type Match,
   type Team,
 } from '@/lib/types';
-import { NINES, formatToPar, holeInfo, isNineId, nextNine, parForHole, totalPar } from '@/lib/course';
+import { NINES, formatToPar, isNineId, nextNine, parForHole, totalPar } from '@/lib/course';
+import { celebrate, isSoundOn, setSoundOn, type CelebrationKind } from '@/lib/celebrate';
+import { Celebration } from '@/components/Celebration';
 
 export default function TeamPage({ params }: { params: { match_code: string } }) {
   const code = params.match_code.toUpperCase();
@@ -34,6 +36,22 @@ export default function TeamPage({ params }: { params: { match_code: string } })
   const [confirming, setConfirming] = useState(false);
   const [submitBusy, setSubmitBusy] = useState(false);
   const [error, setError] = useState('');
+
+  // celebration + sound
+  const [party, setParty] = useState<{ kind: CelebrationKind; id: number } | null>(null);
+  const [soundOn, setSound] = useState(true);
+  useEffect(() => setSound(isSoundOn()), []);
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSound(next);
+    setSoundOn(next);
+  };
+  const triggerCelebration = (kind: CelebrationKind) => {
+    celebrate(kind);
+    const id = Date.now();
+    setParty({ kind, id });
+    setTimeout(() => setParty((p) => (p?.id === id ? null : p)), 1700);
+  };
 
   const refresh = useCallback(async (teamId: string) => {
     const [{ data: s }, { data: b }] = await Promise.all([
@@ -130,8 +148,24 @@ export default function TeamPage({ params }: { params: { match_code: string } })
       setConfirming(false);
       return;
     }
+
+    // Celebrate: finishing the round wins over the hole result; otherwise reward
+    // par or better on the hole.
+    const par = parForHole(team.start_nine, openHole);
+    const willFinish = scores.length + 1 >= TOTAL_HOLES;
+    let kind: CelebrationKind | null = null;
+    if (willFinish) kind = 'finish';
+    else if (par != null) {
+      const d = draftStrokes - par;
+      if (d <= -3) kind = 'albatross';
+      else if (d === -2) kind = 'eagle';
+      else if (d === -1) kind = 'birdie';
+      else if (d === 0) kind = 'par';
+    }
+
     await refresh(team.id);
     closeEntry();
+    if (kind) triggerCelebration(kind);
   };
 
   if (loading || !ready) return <p className="p-6 text-ink-dim">Loading…</p>;
@@ -208,12 +242,21 @@ export default function TeamPage({ params }: { params: { match_code: string } })
             </p>
           )}
         </div>
-        <button
-          onClick={() => signOut()}
-          className="shrink-0 text-xs text-ink-faint underline-offset-2 hover:underline"
-        >
-          Sign out
-        </button>
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <button
+            onClick={toggleSound}
+            aria-label={soundOn ? 'Mute sound' : 'Unmute sound'}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.04] text-ink-dim transition hover:bg-white/[0.08]"
+          >
+            {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
+          </button>
+          <button
+            onClick={() => signOut()}
+            className="text-xs text-ink-faint underline-offset-2 hover:underline"
+          >
+            Sign out
+          </button>
+        </div>
       </header>
 
       <div className="glass grid grid-cols-4 gap-1 p-4 text-center">
@@ -229,19 +272,12 @@ export default function TeamPage({ params }: { params: { match_code: string } })
         <h2 className="eyebrow mb-2.5">Scorecard</h2>
         <div className="grid grid-cols-3 gap-2">
           {HOLES.map((hole) => {
-            const info = holeInfo(team.start_nine, hole);
-            const holePar = info ? info.nine.par[info.local - 1] : null;
-            const label = info ? (
-              <span className="flex items-center justify-center gap-1 text-[11px] text-ink-dim">
-                <span
-                  className="inline-block h-2 w-2 rounded-full ring-1 ring-white/20"
-                  style={{ backgroundColor: info.nine.dot }}
-                />
-                {info.nine.label} {info.local}
-                {holePar != null && <span className="text-ink-faint">· {holePar}</span>}
+            const holePar = parForHole(team.start_nine, hole);
+            const label = (
+              <span className="text-[11px] text-ink-dim">
+                Hole {hole}
+                {holePar != null && <span className="text-ink-faint"> · par {holePar}</span>}
               </span>
-            ) : (
-              <span className="text-[11px] text-ink-dim">Hole {hole}</span>
             );
             const s = submittedHoles.get(hole);
             if (s) {
@@ -289,19 +325,12 @@ export default function TeamPage({ params }: { params: { match_code: string } })
           <div className="w-full max-w-sm animate-sheet-up rounded-3xl border border-white/[0.08] bg-surface p-5 shadow-glass">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-display text-lg font-bold text-ink">
-                {(() => {
-                  const info = holeInfo(team.start_nine, openHole);
-                  return info ? (
-                    <>
-                      {info.nine.label} {info.local}
-                      <span className="ml-2 text-sm font-medium text-ink-faint">
-                        par {info.nine.par[info.local - 1]}
-                      </span>
-                    </>
-                  ) : (
-                    <>Hole {openHole}</>
-                  );
-                })()}
+                Hole {openHole}
+                {parForHole(team.start_nine, openHole) != null && (
+                  <span className="ml-2 text-sm font-medium text-ink-faint">
+                    par {parForHole(team.start_nine, openHole)}
+                  </span>
+                )}
               </h3>
               <button
                 onClick={closeEntry}
@@ -340,7 +369,27 @@ export default function TeamPage({ params }: { params: { match_code: string } })
       >
         View leaderboard →
       </Link>
+
+      {party && <Celebration key={party.id} kind={party.kind} />}
     </main>
+  );
+}
+
+function SoundOnIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M11 5 6 9H3v6h3l5 4V5Z" fill="currentColor" />
+      <path d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8 8 0 0 1 0 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SoundOffIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M11 5 6 9H3v6h3l5 4V5Z" fill="currentColor" />
+      <path d="m16 9 5 6M21 9l-5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
   );
 }
 
