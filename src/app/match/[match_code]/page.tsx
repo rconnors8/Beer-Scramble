@@ -76,13 +76,13 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
     };
   }, [code, load]);
 
-  if (!ready) return <p className="p-6 text-slate-500">Loading…</p>;
+  if (!ready) return <p className="p-6 text-ink-dim">Loading…</p>;
 
   if (notFound) {
     return (
       <main className="flex min-h-dvh flex-col justify-center gap-4 p-6 text-center">
-        <h1 className="text-2xl font-bold text-turf-700">Match not found</h1>
-        <Link href="/" className="text-turf-600 underline">Back home</Link>
+        <h1 className="font-display text-2xl font-bold text-ink">Match not found</h1>
+        <Link href="/" className="text-mint underline-offset-2 hover:underline">Back home</Link>
       </main>
     );
   }
@@ -91,78 +91,89 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
 
   return (
     <main className="flex min-h-dvh flex-col gap-4 p-4">
-      <header className="text-center">
-        <h1 className="text-2xl font-bold text-turf-700">{match?.name}</h1>
-        {match?.course_name && <p className="text-slate-600">{match.course_name}</p>}
-        <p className="mt-1 text-sm text-slate-500">
-          {everyoneFinished ? 'Final results' : 'Live leaderboard'} ·{' '}
-          <span className="font-mono">{code}</span>
+      <header className="pt-3 text-center">
+        <p className="eyebrow flex items-center justify-center gap-1.5">
+          <span className={'inline-block h-1.5 w-1.5 rounded-full ' + (everyoneFinished ? 'bg-ink-faint' : 'bg-mint animate-pulse')} />
+          {everyoneFinished ? 'Final results' : 'Live'} · {code}
         </p>
+        <h1 className="mt-1.5 font-display text-2xl font-extrabold tracking-tight text-ink">
+          {match?.name}
+        </h1>
+        {match?.course_name && <p className="text-ink-dim">{match.course_name}</p>}
       </header>
 
       {rows.length === 0 ? (
-        <p className="text-center text-slate-500">No teams have joined yet.</p>
+        <div className="glass p-8 text-center text-ink-dim">No teams have joined yet.</div>
       ) : (
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+        <div className="glass overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-2 py-3 text-left">#</th>
+              <tr className="border-b border-white/[0.07] text-[0.62rem] uppercase tracking-[0.08em] text-ink-faint">
+                <th className="py-3 pl-3 pr-1 text-left">#</th>
                 <th className="px-1.5 py-3 text-left">Team</th>
                 <th className="px-1.5 py-3 text-center">Thru</th>
                 <th className="px-1.5 py-3 text-center">Par</th>
                 <th className="px-1.5 py-3 text-right">Gross</th>
                 <th className="px-1.5 py-3 text-right">🍺</th>
-                <th className="px-2 py-3 text-right">Adj</th>
+                <th className="py-3 pl-1 pr-3 text-right">Adj</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r, i) => {
                 const nine = isNineId(r.startNine) ? NINES[r.startNine] : null;
+                const medal = ['🥇', '🥈', '🥉'][i];
                 return (
-                  <tr key={r.teamId} className="border-b border-slate-50 last:border-0">
-                    <td className="px-2 py-3 font-semibold text-slate-400">{i + 1}</td>
+                  <tr
+                    key={r.teamId}
+                    className={
+                      'border-b border-white/[0.05] last:border-0 ' +
+                      (i === 0 ? 'bg-mint/[0.04]' : '')
+                    }
+                  >
+                    <td className="py-3 pl-3 pr-1 text-center font-display font-bold text-ink-dim">
+                      {medal ?? i + 1}
+                    </td>
                     <td className="px-1.5 py-3">
                       <div className="flex items-center gap-1.5">
                         {nine && (
                           <span
-                            className="inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-black/10"
+                            className="inline-block h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-white/20"
                             style={{ backgroundColor: nine.dot }}
                             title={`Started on ${nine.label}`}
                           />
                         )}
-                        <span className="font-semibold text-slate-800">{r.teamName}</span>
+                        <span className="font-semibold text-ink">{r.teamName}</span>
                       </div>
                       {r.membersLabel && (
-                        <div className="pl-4 text-xs text-slate-400">{r.membersLabel}</div>
+                        <div className="pl-4 text-xs text-ink-faint">{r.membersLabel}</div>
                       )}
                     </td>
                     <td className="px-1.5 py-3 text-center">
                       {r.finished ? (
-                        <span className="font-bold text-turf-700">F</span>
+                        <span className="font-display font-bold text-mint">F</span>
                       ) : (
-                        <span className="text-slate-500">{r.holesPlayed}</span>
+                        <span className="tabular-nums text-ink-dim">{r.holesPlayed}</span>
                       )}
                     </td>
                     <td
                       className={
-                        'px-1.5 py-3 text-center font-bold tabular-nums ' +
+                        'px-1.5 py-3 text-center font-display font-bold tabular-nums ' +
                         (r.toPar == null
-                          ? 'text-slate-300'
+                          ? 'text-ink-faint'
                           : r.toPar <= 0
-                            ? 'text-turf-600'
-                            : 'text-slate-600')
+                            ? 'text-mint'
+                            : 'text-coral')
                       }
                     >
                       {formatToPar(r.toPar)}
                     </td>
-                    <td className="px-1.5 py-3 text-right tabular-nums text-slate-600">
+                    <td className="px-1.5 py-3 text-right tabular-nums text-ink-dim">
                       {r.grossStrokes}
                     </td>
-                    <td className="px-1.5 py-3 text-right tabular-nums text-beer-500">
+                    <td className="px-1.5 py-3 text-right tabular-nums text-amber">
                       −{r.beers}
                     </td>
-                    <td className="px-2 py-3 text-right text-lg font-extrabold tabular-nums text-turf-700">
+                    <td className="py-3 pl-1 pr-3 text-right font-display text-lg font-extrabold tabular-nums text-ink">
                       {r.adjustedScore}
                     </td>
                   </tr>
@@ -173,10 +184,11 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
         </div>
       )}
 
-      <p className="text-center text-xs text-slate-400">
-        Par = over/under par so far · Adjusted = gross − beers (max 30), lowest wins.
+      <p className="text-center text-xs text-ink-faint">
+        <span className="text-mint">Par</span> = over/under par so far ·{' '}
+        <span className="text-ink-dim">Adj</span> = gross − beers (max 30), lowest wins.
       </p>
-      <Link href="/" className="text-center text-sm text-turf-600 underline">
+      <Link href="/" className="text-center text-sm text-mint underline-offset-2 hover:underline">
         Home
       </Link>
     </main>

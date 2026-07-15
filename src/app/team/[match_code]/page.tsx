@@ -134,13 +134,13 @@ export default function TeamPage({ params }: { params: { match_code: string } })
     closeEntry();
   };
 
-  if (loading || !ready) return <p className="p-6 text-slate-500">Loading…</p>;
+  if (loading || !ready) return <p className="p-6 text-ink-dim">Loading…</p>;
 
   if (!match) {
     return (
       <main className="flex min-h-dvh flex-col justify-center gap-4 p-6 text-center">
-        <h1 className="text-2xl font-bold text-turf-700">Match not found</h1>
-        <Link href="/" className="text-turf-600 underline">Back home</Link>
+        <h1 className="font-display text-2xl font-bold text-ink">Match not found</h1>
+        <Link href="/" className="text-mint underline-offset-2 hover:underline">Back home</Link>
       </main>
     );
   }
@@ -148,8 +148,8 @@ export default function TeamPage({ params }: { params: { match_code: string } })
   if (!session) {
     return (
       <main className="flex min-h-dvh flex-col justify-center gap-4 p-6">
-        <h1 className="text-center text-2xl font-bold text-turf-700">{match.name}</h1>
-        <p className="text-center text-slate-600">Sign in to reach your team dashboard.</p>
+        <h1 className="text-center font-display text-2xl font-bold text-ink">{match.name}</h1>
+        <p className="text-center text-ink-dim">Sign in to reach your team dashboard.</p>
         <SignInButton />
       </main>
     );
@@ -158,11 +158,11 @@ export default function TeamPage({ params }: { params: { match_code: string } })
   if (!team) {
     return (
       <main className="flex min-h-dvh flex-col justify-center gap-4 p-6 text-center">
-        <h1 className="text-2xl font-bold text-turf-700">{match.name}</h1>
-        <p className="text-slate-600">You haven&apos;t joined this match yet.</p>
+        <h1 className="font-display text-2xl font-bold text-ink">{match.name}</h1>
+        <p className="text-ink-dim">You haven&apos;t joined this match yet.</p>
         <Link
           href={`/join/${code}`}
-          className="rounded-xl bg-turf-600 px-5 py-4 font-semibold text-white"
+          className="rounded-2xl bg-mint px-5 py-4 font-display font-bold text-mint-ink shadow-glow"
         >
           Set up my team
         </Link>
@@ -179,25 +179,28 @@ export default function TeamPage({ params }: { params: { match_code: string } })
   const secondNine = isNineId(team.start_nine) ? NINES[nextNine(team.start_nine)] : null;
   const parPlayed = scores.reduce((sum, s) => sum + (parForHole(team.start_nine, s.hole_number) ?? 0), 0);
   const toPar = startNine ? gross - parPlayed : null;
+  const toParTone = toPar == null ? 'text-ink' : toPar <= 0 ? 'text-mint' : 'text-coral';
 
   return (
-    <main className="flex min-h-dvh flex-col gap-4 p-4 pb-24">
-      <header className="flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-turf-700">{team.team_name}</h1>
-          {team.members_label && <p className="text-sm text-slate-500">{team.members_label}</p>}
-          <p className="text-sm text-slate-600">
-            {match.name} · <span className="font-mono">{match.match_code}</span>
+    <main className="flex min-h-dvh flex-col gap-4 p-4 pb-28">
+      <header className="flex items-start justify-between gap-3 pt-2">
+        <div className="min-w-0">
+          <h1 className="truncate font-display text-2xl font-extrabold tracking-tight text-ink">
+            {team.team_name}
+          </h1>
+          {team.members_label && <p className="text-sm text-ink-dim">{team.members_label}</p>}
+          <p className="mt-0.5 text-xs text-ink-faint">
+            {match.name} · <span className="tracking-wider">{match.match_code}</span>
           </p>
           {startNine && secondNine && (
-            <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-dim">
               <span className="flex items-center">
                 <span
-                  className="inline-block h-3 w-3 rounded-full border border-black/10"
+                  className="inline-block h-3 w-3 rounded-full ring-1 ring-white/20"
                   style={{ backgroundColor: startNine.dot }}
                 />
                 <span
-                  className="-ml-0.5 inline-block h-3 w-3 rounded-full border border-black/10"
+                  className="-ml-0.5 inline-block h-3 w-3 rounded-full ring-1 ring-white/20"
                   style={{ backgroundColor: secondNine.dot }}
                 />
               </span>
@@ -205,52 +208,56 @@ export default function TeamPage({ params }: { params: { match_code: string } })
             </p>
           )}
         </div>
-        <button onClick={() => signOut()} className="text-xs text-slate-400 underline">
+        <button
+          onClick={() => signOut()}
+          className="shrink-0 text-xs text-ink-faint underline-offset-2 hover:underline"
+        >
           Sign out
         </button>
       </header>
 
-      <div className="grid grid-cols-4 gap-2 rounded-2xl bg-white p-3 text-center shadow-sm">
-        <Stat label="Status" value={finished ? 'F' : `Thru ${holesPlayed}`} />
-        <Stat label="To Par" value={formatToPar(toPar)} highlight />
-        <Stat label="Gross" value={String(gross)} />
-        <Stat label="Adj" value={String(adjusted)} />
+      <div className="glass grid grid-cols-4 gap-1 p-4 text-center">
+        <Stat label="Thru" value={finished ? 'F' : String(holesPlayed)} tone={finished ? 'text-mint' : 'text-ink'} />
+        <Stat label="To Par" value={formatToPar(toPar)} tone={toParTone} big />
+        <Stat label="Gross" value={String(gross)} tone="text-ink" />
+        <Stat label="Adj" value={String(adjusted)} tone="text-ink" />
       </div>
 
       <BeerButton teamId={team.id} count={beerCount} onChange={() => void refresh(team.id)} />
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Scorecard
-        </h2>
+        <h2 className="eyebrow mb-2.5">Scorecard</h2>
         <div className="grid grid-cols-3 gap-2">
           {HOLES.map((hole) => {
             const info = holeInfo(team.start_nine, hole);
             const holePar = info ? info.nine.par[info.local - 1] : null;
             const label = info ? (
-              <span className="flex items-center justify-center gap-1 text-xs text-slate-500">
+              <span className="flex items-center justify-center gap-1 text-[11px] text-ink-dim">
                 <span
-                  className="inline-block h-2 w-2 rounded-full border border-black/10"
+                  className="inline-block h-2 w-2 rounded-full ring-1 ring-white/20"
                   style={{ backgroundColor: info.nine.dot }}
                 />
                 {info.nine.label} {info.local}
-                {holePar != null && <span className="text-slate-400">· par {holePar}</span>}
+                {holePar != null && <span className="text-ink-faint">· {holePar}</span>}
               </span>
             ) : (
-              <span className="text-xs text-slate-500">Hole {hole}</span>
+              <span className="text-[11px] text-ink-dim">Hole {hole}</span>
             );
             const s = submittedHoles.get(hole);
             if (s) {
               const d = holePar != null ? s.strokes - holePar : null;
+              const dTone = d == null ? 'text-ink-faint' : d <= 0 ? 'text-mint' : 'text-coral';
               return (
                 <div
                   key={hole}
-                  className="flex flex-col items-center gap-0.5 rounded-xl border border-turf-100 bg-turf-50 py-3"
+                  className="glass-2 flex flex-col items-center gap-0.5 py-3"
                 >
                   {label}
-                  <span className="text-2xl font-bold text-turf-700">{s.strokes}</span>
+                  <span className="font-display text-2xl font-bold tabular-nums text-ink">
+                    {s.strokes}
+                  </span>
                   {d != null && (
-                    <span className="text-[11px] font-semibold text-slate-400">{formatToPar(d)}</span>
+                    <span className={'text-[11px] font-bold ' + dTone}>{formatToPar(d)}</span>
                   )}
                 </div>
               );
@@ -262,15 +269,15 @@ export default function TeamPage({ params }: { params: { match_code: string } })
                   setOpenHole(hole);
                   setDraftStrokes(null);
                 }}
-                className="flex flex-col items-center gap-0.5 rounded-xl border border-dashed border-slate-300 bg-white py-3 active:scale-95"
+                className="flex flex-col items-center gap-0.5 rounded-2xl border border-dashed border-white/[0.1] bg-white/[0.02] py-3 transition hover:border-mint/40 hover:bg-white/[0.04] active:scale-95"
               >
                 {label}
-                <span className="text-2xl font-bold text-slate-300">–</span>
+                <span className="font-display text-2xl font-bold text-ink-faint">+</span>
               </button>
             );
           })}
         </div>
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-ink-faint">
           Play is 1→18, but you can enter any open hole whenever. Submitted scores lock
           permanently — there is no edit.
         </p>
@@ -278,21 +285,28 @@ export default function TeamPage({ params }: { params: { match_code: string } })
 
       {/* Score entry sheet */}
       {openHole != null && !confirming && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">
-                Hole {openHole}
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center">
+          <div className="w-full max-w-sm animate-sheet-up rounded-3xl border border-white/[0.08] bg-surface p-5 shadow-glass">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-display text-lg font-bold text-ink">
                 {(() => {
                   const info = holeInfo(team.start_nine, openHole);
                   return info ? (
-                    <span className="ml-2 text-sm font-medium text-slate-400">
-                      {info.nine.label} {info.local} · par {info.nine.par[info.local - 1]}
-                    </span>
-                  ) : null;
+                    <>
+                      {info.nine.label} {info.local}
+                      <span className="ml-2 text-sm font-medium text-ink-faint">
+                        par {info.nine.par[info.local - 1]}
+                      </span>
+                    </>
+                  ) : (
+                    <>Hole {openHole}</>
+                  );
                 })()}
               </h3>
-              <button onClick={closeEntry} className="text-sm text-slate-500 underline">
+              <button
+                onClick={closeEntry}
+                className="text-sm text-ink-dim underline-offset-2 hover:underline"
+              >
                 Cancel
               </button>
             </div>
@@ -300,7 +314,7 @@ export default function TeamPage({ params }: { params: { match_code: string } })
             <button
               onClick={() => setConfirming(true)}
               disabled={draftStrokes == null}
-              className="mt-4 w-full rounded-xl bg-turf-600 px-5 py-4 text-lg font-semibold text-white active:scale-[0.99] disabled:opacity-50"
+              className="mt-4 w-full rounded-2xl bg-mint px-5 py-4 font-display text-lg font-bold text-mint-ink shadow-glow transition active:scale-[0.99] disabled:opacity-40 disabled:shadow-none"
             >
               Submit
             </button>
@@ -318,9 +332,12 @@ export default function TeamPage({ params }: { params: { match_code: string } })
         />
       )}
 
-      {error && <p className="text-center text-sm text-red-600">{error}</p>}
+      {error && <p className="text-center text-sm text-coral">{error}</p>}
 
-      <Link href={`/match/${code}`} className="text-center text-sm text-turf-600 underline">
+      <Link
+        href={`/match/${code}`}
+        className="text-center text-sm text-mint underline-offset-2 hover:underline"
+      >
         View leaderboard →
       </Link>
     </main>
@@ -330,16 +347,24 @@ export default function TeamPage({ params }: { params: { match_code: string } })
 function Stat({
   label,
   value,
-  highlight,
+  tone,
+  big,
 }: {
   label: string;
   value: string;
-  highlight?: boolean;
+  tone: string;
+  big?: boolean;
 }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wide text-slate-400">{label}</p>
-      <p className={'text-xl font-extrabold ' + (highlight ? 'text-turf-700' : 'text-slate-800')}>
+      <p className="text-[10px] uppercase tracking-wide text-ink-faint">{label}</p>
+      <p
+        className={
+          'font-display font-extrabold tabular-nums ' +
+          (big ? 'text-2xl ' : 'text-xl ') +
+          tone
+        }
+      >
         {value}
       </p>
     </div>

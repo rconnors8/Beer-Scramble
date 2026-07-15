@@ -17,7 +17,7 @@ export function NumberPad({
     (_, i) => MIN_STROKES + i
   );
   return (
-    <div className="grid grid-cols-5 gap-2">
+    <div className="grid grid-cols-5 gap-2.5">
       {nums.map((n) => {
         const active = value === n;
         return (
@@ -25,10 +25,10 @@ export function NumberPad({
             key={n}
             onClick={() => onSelect(n)}
             className={
-              'aspect-square rounded-xl text-2xl font-bold shadow-sm active:scale-95 ' +
+              'aspect-square rounded-2xl font-display text-2xl font-bold tabular-nums transition active:scale-95 ' +
               (active
-                ? 'bg-turf-600 text-white'
-                : 'bg-white text-slate-800 border border-slate-200')
+                ? 'bg-mint text-mint-ink shadow-glow'
+                : 'border border-white/[0.08] bg-white/[0.04] text-ink hover:bg-white/[0.08]')
             }
           >
             {n}

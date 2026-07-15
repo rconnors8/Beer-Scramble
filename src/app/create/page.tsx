@@ -25,12 +25,12 @@ export default function CreatePage() {
   const [error, setError] = useState('');
   const [created, setCreated] = useState<Match | null>(null);
 
-  if (loading) return <p className="p-6 text-slate-500">Loading…</p>;
+  if (loading) return <p className="p-6 text-ink-dim">Loading…</p>;
   if (!session) {
     return (
       <main className="flex min-h-dvh flex-col justify-center gap-4 p-6">
-        <h1 className="text-center text-2xl font-bold text-turf-700">Create a match</h1>
-        <p className="text-center text-slate-600">Sign in first to create a match.</p>
+        <h1 className="text-center font-display text-2xl font-bold text-ink">Create a match</h1>
+        <p className="text-center text-ink-dim">Sign in first to create a match.</p>
         <SignInButton />
       </main>
     );
@@ -40,7 +40,6 @@ export default function CreatePage() {
     if (!name.trim()) return;
     setBusy(true);
     setError('');
-    // Retry a couple of times in the (unlikely) event of a code collision.
     for (let attempt = 0; attempt < 5; attempt++) {
       const match_code = randomCode();
       const { data, error } = await supabase
@@ -72,11 +71,12 @@ export default function CreatePage() {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     return (
       <main className="flex min-h-dvh flex-col justify-center gap-5 p-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-turf-700">{created.name}</h1>
-          {created.course_name && <p className="text-slate-600">{created.course_name}</p>}
-          <p className="mt-3 text-sm text-slate-500">Match code</p>
-          <p className="font-mono text-4xl font-extrabold tracking-widest text-slate-800">
+        <div className="glass px-6 py-7 text-center">
+          <p className="eyebrow">Match created</p>
+          <h1 className="mt-1 font-display text-2xl font-bold text-ink">{created.name}</h1>
+          {created.course_name && <p className="text-ink-dim">{created.course_name}</p>}
+          <p className="mt-4 text-xs uppercase tracking-widest text-ink-faint">Match code</p>
+          <p className="font-display text-5xl font-extrabold tracking-[0.15em] text-mint">
             {created.match_code}
           </p>
         </div>
@@ -84,16 +84,16 @@ export default function CreatePage() {
         <ShareLink label="Team join link" href={`${origin}/join/${created.match_code}`} />
         <ShareLink label="Leaderboard link" href={`${origin}/match/${created.match_code}`} />
 
-        <div className="mt-2 flex flex-col gap-2">
+        <div className="mt-2 flex flex-col gap-3">
           <Link
             href={`/join/${created.match_code}`}
-            className="rounded-xl bg-turf-600 px-5 py-4 text-center font-semibold text-white active:scale-[0.99]"
+            className="rounded-2xl bg-mint px-5 py-4 text-center font-display font-bold text-mint-ink shadow-glow transition active:scale-[0.99]"
           >
             Set up my team
           </Link>
           <Link
             href={`/match/${created.match_code}`}
-            className="text-center text-sm text-turf-600 underline"
+            className="text-center text-sm text-mint underline-offset-2 hover:underline"
           >
             Open leaderboard
           </Link>
@@ -104,35 +104,48 @@ export default function CreatePage() {
 
   return (
     <main className="flex min-h-dvh flex-col justify-center gap-4 p-6">
-      <Link href="/" className="text-sm text-slate-500 underline">
+      <Link href="/" className="text-sm text-ink-faint underline-offset-2 hover:underline">
         ← Home
       </Link>
-      <h1 className="text-2xl font-bold text-turf-700">Create a match</h1>
-      <label className="text-sm font-medium text-slate-600">Match name</label>
-      <input
-        value={name}
-        maxLength={80}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Saturday Scramble"
-        className="rounded-lg border border-slate-300 px-4 py-4 text-lg"
-      />
-      <label className="text-sm font-medium text-slate-600">Course (optional)</label>
-      <input
-        value={course}
-        maxLength={80}
-        onChange={(e) => setCourse(e.target.value)}
-        placeholder="Pine Valley"
-        className="rounded-lg border border-slate-300 px-4 py-4 text-lg"
-      />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <h1 className="font-display text-3xl font-extrabold tracking-tight text-ink">
+        Create a match
+      </h1>
+      <Field label="Match name">
+        <input
+          value={name}
+          maxLength={80}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Saturday Scramble"
+          className="input"
+        />
+      </Field>
+      <Field label="Course (optional)">
+        <input
+          value={course}
+          maxLength={80}
+          onChange={(e) => setCourse(e.target.value)}
+          placeholder="Colonie Town"
+          className="input"
+        />
+      </Field>
+      {error && <p className="text-sm text-coral">{error}</p>}
       <button
         onClick={create}
         disabled={busy || !name.trim()}
-        className="mt-2 rounded-xl bg-turf-600 px-5 py-4 text-lg font-semibold text-white active:scale-[0.99] disabled:opacity-50"
+        className="mt-2 rounded-2xl bg-mint px-5 py-4 font-display text-lg font-bold text-mint-ink shadow-glow transition active:scale-[0.99] disabled:opacity-40 disabled:shadow-none"
       >
         {busy ? 'Creating…' : 'Create match'}
       </button>
     </main>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="flex flex-col gap-2">
+      <span className="eyebrow">{label}</span>
+      {children}
+    </label>
   );
 }
 
@@ -148,17 +161,17 @@ function ShareLink({ label, href }: { label: string; href: string }) {
     }
   };
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <div className="mt-1 flex items-center gap-2">
-        <span className="min-w-0 flex-1 truncate text-sm text-slate-700">{href}</span>
-        <button
-          onClick={copy}
-          className="shrink-0 rounded-lg bg-turf-100 px-3 py-2 text-sm font-semibold text-turf-700"
-        >
-          {copied ? 'Copied' : 'Copy'}
-        </button>
+    <div className="glass-2 flex items-center gap-2 p-3">
+      <div className="min-w-0 flex-1">
+        <p className="eyebrow">{label}</p>
+        <p className="mt-0.5 truncate text-sm text-ink-dim">{href}</p>
       </div>
+      <button
+        onClick={copy}
+        className="shrink-0 rounded-xl border border-mint/30 bg-mint/10 px-3 py-2 text-sm font-semibold text-mint transition active:scale-95"
+      >
+        {copied ? 'Copied' : 'Copy'}
+      </button>
     </div>
   );
 }

@@ -2,17 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: dark;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }
 
 body {
-  @apply bg-turf-50 text-slate-800 antialiased;
+  @apply bg-bg text-ink font-sans antialiased;
+  background-image:
+    radial-gradient(120% 80% at 50% -10%, rgba(69, 227, 160, 0.1) 0%, rgba(10, 15, 13, 0) 55%),
+    radial-gradient(90% 60% at 100% 100%, rgba(245, 185, 60, 0.05) 0%, rgba(10, 15, 13, 0) 60%);
+  background-attachment: fixed;
+  min-height: 100dvh;
 }
 
-/* Keep number inputs from showing spinners on the odd place we use them. */
+/* Hide number input spinners where we use them. */
 input[type='number']::-webkit-outer-spin-button,
 input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+/* Refined dark scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+}
+
+::selection {
+  background: rgba(69, 227, 160, 0.28);
+}
+
+@layer components {
+  /* Glassy card surface used across the app. */
+  .glass {
+    @apply rounded-3xl border border-white/[0.07] bg-white/[0.035] shadow-glass backdrop-blur-xl;
+  }
+  .glass-2 {
+    @apply rounded-2xl border border-white/[0.08] bg-white/[0.05];
+  }
+  .eyebrow {
+    @apply text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-ink-faint;
+  }
+  .input {
+    @apply w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3.5 text-lg text-ink placeholder:text-ink-faint transition focus:border-mint/50 focus:outline-none focus:ring-2 focus:ring-mint/25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }

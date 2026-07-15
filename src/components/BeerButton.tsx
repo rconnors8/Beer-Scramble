@@ -30,6 +30,7 @@ export function BeerButton({
   }, []);
 
   const atCap = count >= MAX_BEERS;
+  const pct = Math.min(100, (count / MAX_BEERS) * 100);
 
   const logBeer = async () => {
     if (atCap || busy) return;
@@ -60,21 +61,44 @@ export function BeerButton({
         onClick={logBeer}
         disabled={atCap || busy}
         className={
-          'flex w-full items-center justify-center gap-3 rounded-2xl px-5 py-6 text-2xl font-bold shadow-sm active:scale-[0.99] ' +
-          (atCap ? 'bg-slate-200 text-slate-500' : 'bg-beer-400 text-amber-950')
+          'relative w-full overflow-hidden rounded-3xl px-5 py-5 text-left transition active:scale-[0.99] ' +
+          (atCap
+            ? 'border border-white/[0.06] bg-white/[0.03]'
+            : 'bg-amber text-amber-ink shadow-glow-amber')
         }
       >
-        <span>🍺</span>
-        <span>{atCap ? 'Cap reached' : 'Log a Beer'}</span>
-        <span className="tabular-nums">{count} / {MAX_BEERS}</span>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-3">
+            <span className="text-2xl">🍺</span>
+            <span className="font-display text-xl font-bold">
+              {atCap ? 'Cap reached' : 'Log a beer'}
+            </span>
+          </span>
+          <span
+            className={
+              'font-display text-2xl font-extrabold tabular-nums ' +
+              (atCap ? 'text-ink-dim' : 'text-amber-ink')
+            }
+          >
+            {count}
+            <span className={atCap ? 'text-ink-faint' : 'text-amber-ink/60'}> / {MAX_BEERS}</span>
+          </span>
+        </div>
+        {/* progress toward the cap */}
+        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-black/20">
+          <div
+            className="h-full rounded-full bg-black/40 transition-[width] duration-300"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
       </button>
-      {error && <p className="mt-2 text-center text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-center text-sm text-coral">{error}</p>}
 
       {showUndo && (
-        <div className="fixed inset-x-0 bottom-4 z-40 flex justify-center px-4">
-          <div className="flex w-full max-w-md items-center justify-between rounded-xl bg-slate-900 px-4 py-3 text-white shadow-lg">
-            <span>Beer logged 🍺</span>
-            <button onClick={undo} className="font-semibold text-beer-400 underline">
+        <div className="fixed inset-x-0 bottom-5 z-40 flex justify-center px-4">
+          <div className="flex w-full max-w-md animate-sheet-up items-center justify-between rounded-2xl border border-white/[0.08] bg-surface-2/95 px-4 py-3 text-ink shadow-glass backdrop-blur-xl">
+            <span className="font-medium">Beer logged 🍺</span>
+            <button onClick={undo} className="font-bold text-amber underline-offset-2 hover:underline">
               Undo
             </button>
           </div>

@@ -22,8 +22,6 @@ export default function JoinPage({ params }: { params: { match_code: string } })
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // Look up the match, and if the signed-in user already owns a team, skip
-  // straight to their dashboard.
   useEffect(() => {
     let active = true;
     (async () => {
@@ -72,14 +70,14 @@ export default function JoinPage({ params }: { params: { match_code: string } })
     router.replace(`/team/${code}`);
   };
 
-  if (loading || checking) return <p className="p-6 text-slate-500">Loading…</p>;
+  if (loading || checking) return <p className="p-6 text-ink-dim">Loading…</p>;
 
   if (!match) {
     return (
       <main className="flex min-h-dvh flex-col justify-center gap-4 p-6 text-center">
-        <h1 className="text-2xl font-bold text-turf-700">Match not found</h1>
-        <p className="text-slate-600">No match with code {code}.</p>
-        <Link href="/" className="text-turf-600 underline">
+        <h1 className="font-display text-2xl font-bold text-ink">Match not found</h1>
+        <p className="text-ink-dim">No match with code {code}.</p>
+        <Link href="/" className="text-mint underline-offset-2 hover:underline">
           Back home
         </Link>
       </main>
@@ -89,13 +87,16 @@ export default function JoinPage({ params }: { params: { match_code: string } })
   if (!session) {
     return (
       <main className="flex min-h-dvh flex-col justify-center gap-4 p-6">
-        <h1 className="text-center text-2xl font-bold text-turf-700">{match.name}</h1>
-        {match.course_name && <p className="text-center text-slate-600">{match.course_name}</p>}
-        <p className="text-center text-slate-600">Sign in with Google to score for your team.</p>
+        <div className="text-center">
+          <p className="eyebrow">Join match</p>
+          <h1 className="mt-1 font-display text-2xl font-bold text-ink">{match.name}</h1>
+          {match.course_name && <p className="text-ink-dim">{match.course_name}</p>}
+        </div>
+        <p className="text-center text-ink-dim">Sign in with Google to score for your team.</p>
         <SignInButton />
         <Link
           href={`/match/${code}`}
-          className="text-center text-sm text-turf-600 underline"
+          className="text-center text-sm text-mint underline-offset-2 hover:underline"
         >
           Just watch the leaderboard →
         </Link>
@@ -105,74 +106,81 @@ export default function JoinPage({ params }: { params: { match_code: string } })
 
   return (
     <main className="flex min-h-dvh flex-col justify-center gap-4 p-6">
-      <h1 className="text-center text-2xl font-bold text-turf-700">{match.name}</h1>
-      {match.course_name && <p className="text-center text-slate-600">{match.course_name}</p>}
-      <p className="text-center text-slate-600">Set up your team</p>
-
-      <label className="text-sm font-medium text-slate-600">Team name</label>
-      <input
-        value={teamName}
-        maxLength={60}
-        onChange={(e) => setTeamName(e.target.value)}
-        placeholder="The Sandbaggers"
-        className="rounded-lg border border-slate-300 px-4 py-4 text-lg"
-      />
-      <label className="text-sm font-medium text-slate-600">Players (optional)</label>
-      <input
-        value={membersLabel}
-        maxLength={60}
-        onChange={(e) => setMembersLabel(e.target.value)}
-        placeholder="Mike & Dave"
-        className="rounded-lg border border-slate-300 px-4 py-4 text-lg"
-      />
-
-      <label className="text-sm font-medium text-slate-600">
-        Starting nine — you&apos;ll play it, then the next color
-      </label>
-      <div className="grid grid-cols-2 gap-2">
-        {START_OPTIONS.map((id) => {
-          const nine = NINES[id];
-          const next = NINES[nextNine(id)];
-          const active = startNine === id;
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setStartNine(id)}
-              className={
-                'flex items-center gap-2 rounded-xl border px-3 py-3 text-left active:scale-[0.99] ' +
-                (active
-                  ? 'border-turf-600 bg-turf-50 ring-2 ring-turf-500'
-                  : 'border-slate-300 bg-white')
-              }
-            >
-              <span className="flex shrink-0 items-center">
-                <span
-                  className="h-4 w-4 rounded-full border border-black/10"
-                  style={{ backgroundColor: nine.dot }}
-                />
-                <span
-                  className="-ml-1 h-4 w-4 rounded-full border border-black/10"
-                  style={{ backgroundColor: next.dot }}
-                />
-              </span>
-              <span className="flex flex-col leading-tight">
-                <span className="font-semibold text-slate-800">{nine.label}</span>
-                <span className="text-xs text-slate-500">then {next.label}</span>
-              </span>
-            </button>
-          );
-        })}
+      <div className="text-center">
+        <p className="eyebrow">Set up your team</p>
+        <h1 className="mt-1 font-display text-2xl font-bold text-ink">{match.name}</h1>
+        {match.course_name && <p className="text-ink-dim">{match.course_name}</p>}
       </div>
-      <p className="text-xs text-slate-400">
-        {COURSE_NAME} · two nines, par 72. Loop: Green → Red → Blue → White → Green.
-      </p>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <label className="flex flex-col gap-2">
+        <span className="eyebrow">Team name</span>
+        <input
+          value={teamName}
+          maxLength={60}
+          onChange={(e) => setTeamName(e.target.value)}
+          placeholder="The Sandbaggers"
+          className="input"
+        />
+      </label>
+
+      <label className="flex flex-col gap-2">
+        <span className="eyebrow">Players (optional)</span>
+        <input
+          value={membersLabel}
+          maxLength={60}
+          onChange={(e) => setMembersLabel(e.target.value)}
+          placeholder="Mike & Dave"
+          className="input"
+        />
+      </label>
+
+      <div className="flex flex-col gap-2">
+        <span className="eyebrow">Starting nine — you&apos;ll play it, then the next color</span>
+        <div className="grid grid-cols-2 gap-2.5">
+          {START_OPTIONS.map((id) => {
+            const nine = NINES[id];
+            const next = NINES[nextNine(id)];
+            const active = startNine === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setStartNine(id)}
+                className={
+                  'flex items-center gap-3 rounded-2xl border p-3 text-left transition active:scale-[0.99] ' +
+                  (active
+                    ? 'border-mint/60 bg-mint/[0.08] ring-1 ring-mint/40'
+                    : 'border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.05]')
+                }
+              >
+                <span className="flex shrink-0 items-center">
+                  <span
+                    className="h-5 w-5 rounded-full ring-1 ring-white/20"
+                    style={{ backgroundColor: nine.dot }}
+                  />
+                  <span
+                    className="-ml-1.5 h-5 w-5 rounded-full ring-1 ring-white/20"
+                    style={{ backgroundColor: next.dot }}
+                  />
+                </span>
+                <span className="flex flex-col leading-tight">
+                  <span className="font-display font-bold text-ink">{nine.label}</span>
+                  <span className="text-xs text-ink-dim">then {next.label}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-ink-faint">
+          {COURSE_NAME} · two nines, par 72. Loop: Green → Red → Blue → White → Green.
+        </p>
+      </div>
+
+      {error && <p className="text-sm text-coral">{error}</p>}
       <button
         onClick={join}
         disabled={busy || !teamName.trim()}
-        className="mt-2 rounded-xl bg-turf-600 px-5 py-4 text-lg font-semibold text-white active:scale-[0.99] disabled:opacity-50"
+        className="mt-1 rounded-2xl bg-mint px-5 py-4 font-display text-lg font-bold text-mint-ink shadow-glow transition active:scale-[0.99] disabled:opacity-40 disabled:shadow-none"
       >
         {busy ? 'Joining…' : 'Join match'}
       </button>
