@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
+import { useSession } from '@/lib/useSession';
 import { buildStanding, sortStandings, type TeamStanding } from '@/lib/scoring';
 import { NINES, formatToPar, isNineId } from '@/lib/course';
 import type { BeerLog, HoleScore, Match, Team } from '@/lib/types';
 
 export default function LeaderboardPage({ params }: { params: { match_code: string } }) {
   const code = params.match_code.toUpperCase();
+  const { session } = useSession();
   const [match, setMatch] = useState<Match | null>(null);
   const [rows, setRows] = useState<TeamStanding[]>([]);
   const [ready, setReady] = useState(false);
@@ -188,9 +190,42 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
         <span className="text-mint">Par</span> = over/under par so far ·{' '}
         <span className="text-ink-dim">Adj</span> = gross − beers (max 30), lowest wins.
       </p>
-      <Link href="/" className="text-center text-sm text-mint underline-offset-2 hover:underline">
+
+      {session && (
+        <Link
+          href={`/team/${code}`}
+          className="glass mt-1 flex items-center justify-between gap-3 px-5 py-4 transition hover:bg-white/[0.06] active:scale-[0.99]"
+        >
+          <span className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-mint/15 text-mint">
+              <ScorecardIcon />
+            </span>
+            <span className="flex flex-col">
+              <span className="font-display text-lg font-bold text-ink">Back to my scorecard</span>
+              <span className="text-xs text-ink-dim">Log scores &amp; beers</span>
+            </span>
+          </span>
+          <span className="text-mint">→</span>
+        </Link>
+      )}
+
+      <Link href="/" className="text-center text-sm text-ink-faint underline-offset-2 hover:underline">
         Home
       </Link>
     </main>
+  );
+}
+
+function ScorecardIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M8 8h8M8 12h8M8 16h5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }

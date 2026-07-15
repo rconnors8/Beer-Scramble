@@ -365,9 +365,18 @@ export default function TeamPage({ params }: { params: { match_code: string } })
 
       <Link
         href={`/match/${code}`}
-        className="text-center text-sm text-mint underline-offset-2 hover:underline"
+        className="glass mt-1 flex items-center justify-between gap-3 px-5 py-4 transition hover:bg-white/[0.06] active:scale-[0.99]"
       >
-        View leaderboard →
+        <span className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-mint/15 text-mint">
+            <TrophyIcon />
+          </span>
+          <span className="flex flex-col">
+            <span className="font-display text-lg font-bold text-ink">View leaderboard</span>
+            <span className="text-xs text-ink-dim">See every team, live</span>
+          </span>
+        </span>
+        <span className="text-mint">→</span>
       </Link>
 
       {party && <Celebration key={party.id} kind={party.kind} />}
@@ -389,6 +398,26 @@ function SoundOffIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M11 5 6 9H3v6h3l5 4V5Z" fill="currentColor" />
       <path d="m16 9 5 6M21 9l-5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TrophyIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M7 4h10v4a5 5 0 0 1-10 0V4Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M17 5h2.5a1 1 0 0 1 1 1c0 2-1.5 3.5-3.5 3.5M7 5H4.5a1 1 0 0 0-1 1c0 2 1.5 3.5 3.5 3.5M12 13v3M9 20h6M10 20l.5-4h3l.5 4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

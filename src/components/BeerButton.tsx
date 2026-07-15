@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { playClink } from '@/lib/celebrate';
 import { MAX_BEERS } from '@/lib/types';
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 /**
  * One-tap beer logging — the highest-frequency action. Logs immediately (so the
@@ -21,6 +22,7 @@ export function BeerButton({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [confirming, setConfirming] = useState(false);
   const [showUndo, setShowUndo] = useState(false);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -35,6 +37,7 @@ export function BeerButton({
 
   const logBeer = async () => {
     if (atCap || busy) return;
+    setConfirming(false);
     setBusy(true);
     setError('');
     const { error } = await supabase.rpc('log_beer', { p_team_id: teamId });
@@ -60,7 +63,7 @@ export function BeerButton({
   return (
     <div>
       <button
-        onClick={logBeer}
+        onClick={() => setConfirming(true)}
         disabled={atCap || busy}
         className={
           'relative w-full overflow-hidden rounded-3xl px-5 py-5 text-left transition active:scale-[0.99] ' +
@@ -92,6 +95,16 @@ export function BeerButton({
         </div>
       </button>
       {error && <p className="mt-2 text-center text-sm text-coral">{error}</p>}
+
+      {confirming && (
+        <ConfirmModal
+          message="Log a beer for the team? 🍺"
+          confirmLabel="Log it"
+          onConfirm={logBeer}
+          onCancel={() => setConfirming(false)}
+          busy={busy}
+        />
+      )}
 
       {showUndo && (
         <div className="fixed inset-x-0 bottom-5 z-40 flex justify-center px-4">
