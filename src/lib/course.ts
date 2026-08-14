@@ -27,18 +27,27 @@ export const NINES: Record<NineId, Nine> = {
   green: { id: 'green', label: 'Green', dot: '#1f9d57', par: [4, 5, 3, 4, 5, 4, 4, 3, 4] },
 };
 
-// The physical loop order. next(green)=red and next(blue)=white, per the course.
-export const LOOP_ORDER: NineId[] = ['green', 'red', 'blue', 'white'];
+// The nines pair up: {green, red} and {blue, white}. Start either nine of a
+// pair and you play its partner second. So green→red, red→green, blue→white,
+// white→blue.
+const PARTNER: Record<NineId, NineId> = {
+  green: 'red',
+  red: 'green',
+  blue: 'white',
+  white: 'blue',
+};
 
-export const START_OPTIONS: NineId[] = ['green', 'red', 'blue', 'white'];
+// Starting nines offered when setting up a team. Locked to White for today's
+// round (White → Blue); restore the full list to re-enable all pairings:
+//   ['green', 'red', 'blue', 'white']
+export const START_OPTIONS: NineId[] = ['white'];
 
 export function isNineId(v: string | null | undefined): v is NineId {
   return v === 'red' || v === 'blue' || v === 'white' || v === 'green';
 }
 
 export function nextNine(id: NineId): NineId {
-  const i = LOOP_ORDER.indexOf(id);
-  return LOOP_ORDER[(i + 1) % LOOP_ORDER.length];
+  return PARTNER[id];
 }
 
 // The two nines played, in order, for a round starting on `startId`.

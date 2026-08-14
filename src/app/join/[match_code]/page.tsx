@@ -18,7 +18,7 @@ export default function JoinPage({ params }: { params: { match_code: string } })
   const [checking, setChecking] = useState(true);
   const [teamName, setTeamName] = useState('');
   const [membersLabel, setMembersLabel] = useState('');
-  const [startNine, setStartNine] = useState<NineId>('green');
+  const [startNine, setStartNine] = useState<NineId>('white');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -135,8 +135,8 @@ export default function JoinPage({ params }: { params: { match_code: string } })
       </label>
 
       <div className="flex flex-col gap-2">
-        <span className="eyebrow">Starting nine — you&apos;ll play it, then the next color</span>
-        <div className="grid grid-cols-2 gap-2.5">
+        <span className="eyebrow">Today&apos;s round</span>
+        <div className="grid grid-cols-1 gap-2.5">
           {START_OPTIONS.map((id) => {
             const nine = NINES[id];
             const next = NINES[nextNine(id)];
@@ -172,7 +172,7 @@ export default function JoinPage({ params }: { params: { match_code: string } })
           })}
         </div>
         <p className="text-xs text-ink-faint">
-          {COURSE_NAME} · two nines, par 72. Loop: Green → Red → Blue → White → Green.
+          {COURSE_NAME} · everyone plays White then Blue today, par 72.
         </p>
       </div>
 
