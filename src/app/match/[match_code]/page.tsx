@@ -115,9 +115,7 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
                 <th className="px-1.5 py-3 text-left">Team</th>
                 <th className="px-1.5 py-3 text-center">Thru</th>
                 <th className="px-1.5 py-3 text-center">Par</th>
-                <th className="px-1.5 py-3 text-right">Gross</th>
-                <th className="px-1.5 py-3 text-right">🍺</th>
-                <th className="py-3 pl-1 pr-3 text-right">Adj</th>
+                <th className="py-3 pl-1 pr-3 text-right">Gross</th>
               </tr>
             </thead>
             <tbody>
@@ -169,14 +167,8 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
                     >
                       {formatToPar(r.toPar)}
                     </td>
-                    <td className="px-1.5 py-3 text-right tabular-nums text-ink-dim">
-                      {r.grossStrokes}
-                    </td>
-                    <td className="px-1.5 py-3 text-right tabular-nums text-amber">
-                      −{r.beers}
-                    </td>
                     <td className="py-3 pl-1 pr-3 text-right font-display text-lg font-extrabold tabular-nums text-ink">
-                      {r.adjustedScore}
+                      {r.grossStrokes}
                     </td>
                   </tr>
                 );
@@ -188,7 +180,7 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
 
       <p className="text-center text-xs text-ink-faint">
         <span className="text-mint">Par</span> = over/under par so far ·{' '}
-        <span className="text-ink-dim">Adj</span> = gross − beers (max 30), lowest wins.
+        <span className="text-ink-dim">Gross</span> = total strokes, lowest wins.
       </p>
 
       {session && (
