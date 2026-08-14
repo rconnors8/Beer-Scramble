@@ -1,6 +1,5 @@
 export const HOLES = Array.from({ length: 18 }, (_, i) => i + 1);
 export const TOTAL_HOLES = 18;
-export const MAX_BEERS = 30;
 export const MAX_TEAMS = 8;
 export const MIN_STROKES = 1;
 export const MAX_STROKES = 10;

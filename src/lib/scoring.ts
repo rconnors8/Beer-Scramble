@@ -1,4 +1,4 @@
-import { MAX_BEERS, TOTAL_HOLES, type HoleScore } from './types';
+import { TOTAL_HOLES, type HoleScore } from './types';
 import { parForHole } from './course';
 
 export type TeamStanding = {
@@ -11,14 +11,14 @@ export type TeamStanding = {
   status: string; // "F" or "Thru N"
   grossStrokes: number;
   toPar: number | null; // gross − par over played holes; null if no starting nine
-  beers: number; // capped at MAX_BEERS for the deduction
+  beers: number; // total beers logged (no cap)
   adjustedScore: number; // gross - beers (the metric that wins the league)
 };
 
 /**
- * Adjusted score = total strokes − total beers (beers capped at 30) — still the
- * winning metric. To-par = gross strokes − par over the holes played, using the
- * team's starting nine to know each hole's par (standard golf; "E" at even).
+ * Adjusted score = total strokes − total beers (unlimited) — still the winning
+ * metric. To-par = gross strokes − par over the holes played, using the team's
+ * starting nine to know each hole's par (standard golf; "E" at even).
  */
 export function buildStanding(
   team: { id: string; team_name: string; members_label: string | null; start_nine: string | null },
@@ -28,7 +28,7 @@ export function buildStanding(
   const grossStrokes = scores.reduce((sum, s) => sum + s.strokes, 0);
   const holesPlayed = scores.length;
   const finished = holesPlayed >= TOTAL_HOLES;
-  const beers = Math.min(beerCount, MAX_BEERS);
+  const beers = beerCount;
 
   let toPar: number | null = null;
   if (team.start_nine) {

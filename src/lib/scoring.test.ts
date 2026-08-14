@@ -44,11 +44,11 @@ describe('buildStanding', () => {
     expect(s.status).toBe('F');
   });
 
-  it('caps the beer deduction at 30 even if more are logged', () => {
+  it('counts beers with no cap (unlimited)', () => {
     const s = buildStanding(team('a'), scores('a', 18, 4), 45);
-    // gross = 72, beers capped at 30 -> adjusted 42
-    expect(s.beers).toBe(30);
-    expect(s.adjustedScore).toBe(42);
+    // gross = 72, all 45 beers count -> adjusted 27
+    expect(s.beers).toBe(45);
+    expect(s.adjustedScore).toBe(27);
   });
 
   it('handles a team that has not teed off', () => {

@@ -3,13 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { playClink } from '@/lib/celebrate';
-import { MAX_BEERS } from '@/lib/types';
 import { ConfirmModal } from '@/components/ConfirmModal';
 
 /**
- * One-tap beer logging — the highest-frequency action. Logs immediately (so the
- * cap check and cross-device count stay correct), then shows a ~8s Undo toast.
- * Undo removes the last beer via the undo_last_beer RPC.
+ * Beer logging — an unlimited running tally. A confirm step guards each log,
+ * then it writes immediately (so the cross-device count stays correct) and shows
+ * a ~8s Undo toast. Undo removes the last beer via the undo_last_beer RPC.
  */
 export function BeerButton({
   teamId,
@@ -32,18 +31,15 @@ export function BeerButton({
     };
   }, []);
 
-  const atCap = count >= MAX_BEERS;
-  const pct = Math.min(100, (count / MAX_BEERS) * 100);
-
   const logBeer = async () => {
-    if (atCap || busy) return;
+    if (busy) return;
     setConfirming(false);
     setBusy(true);
     setError('');
     const { error } = await supabase.rpc('log_beer', { p_team_id: teamId });
     setBusy(false);
     if (error) {
-      setError(error.message.includes('cap') ? 'Beer cap reached (30).' : error.message);
+      setError(error.message);
       return;
     }
     playClink();
@@ -64,34 +60,16 @@ export function BeerButton({
     <div>
       <button
         onClick={() => setConfirming(true)}
-        disabled={atCap || busy}
-        className={
-          'relative w-full overflow-hidden rounded-3xl px-5 py-5 text-left transition active:scale-[0.99] ' +
-          (atCap
-            ? 'border border-white/[0.06] bg-white/[0.03]'
-            : 'bg-amber text-amber-ink shadow-glow-amber')
-        }
+        disabled={busy}
+        className="w-full rounded-3xl bg-amber px-5 py-5 text-left text-amber-ink shadow-glow-amber transition active:scale-[0.99] disabled:opacity-70"
       >
         <div className="flex items-center justify-between">
           <span className="font-display text-xl font-extrabold tracking-tight">
-            {atCap ? 'CAP REACHED' : 'LOG A BEER BUD'}
+            LOG A BEER BUD
           </span>
-          <span
-            className={
-              'font-display text-2xl font-extrabold tabular-nums ' +
-              (atCap ? 'text-ink-dim' : 'text-amber-ink')
-            }
-          >
+          <span className="font-display text-3xl font-extrabold tabular-nums text-amber-ink">
             {count}
-            <span className={atCap ? 'text-ink-faint' : 'text-amber-ink/60'}> / {MAX_BEERS}</span>
           </span>
-        </div>
-        {/* progress toward the cap */}
-        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-black/20">
-          <div
-            className="h-full rounded-full bg-black/40 transition-[width] duration-300"
-            style={{ width: `${pct}%` }}
-          />
         </div>
       </button>
       {error && <p className="mt-2 text-center text-sm text-coral">{error}</p>}

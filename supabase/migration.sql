@@ -1,13 +1,13 @@
 -- Golf Beer League — Supabase migration
 --
 -- Run this once in the Supabase SQL editor (or `supabase db push`).
--- It creates the tables, RLS policies, and the two atomic-cap RPCs.
+-- It creates the tables, RLS policies, and the write RPCs.
 --
 -- Enforcement model:
 --   * Reads are public (spectators + leaderboard use the anon key).
 --   * Writes are client-side, gated by RLS keyed on auth.uid().
---   * The two actions needing an atomic cap check — joining a team and
---     logging a beer — go through SECURITY DEFINER functions.
+--   * Team joins (8-team cap) and beer logging go through SECURITY DEFINER
+--     functions; beers are an unlimited tally.
 --   * hole_scores has NO update/delete policy and a unique(team_id, hole_number)
 --     constraint, which together make a submitted score permanently locked.
 
@@ -177,7 +177,7 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- RPC: log_beer — enforces the 30-beer cap atomically
+-- RPC: log_beer — appends one beer for the caller's team (unlimited)
 -- ---------------------------------------------------------------------------
 
 create or replace function log_beer(p_team_id uuid)
@@ -187,17 +187,11 @@ security definer
 set search_path = public
 as $$
 declare
-  v_count int;
   v_owner uuid;
 begin
   select owner_user_id into v_owner from teams where id = p_team_id;
   if v_owner is distinct from auth.uid() then
     raise exception 'not your team';
-  end if;
-
-  select count(*) into v_count from beer_logs where team_id = p_team_id;
-  if v_count >= 30 then
-    raise exception 'beer cap reached';
   end if;
 
   insert into beer_logs (team_id) values (p_team_id);

@@ -223,8 +223,8 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
       {rows.length > 0 &&
         (everyoneFinished ? (
           <p className="text-center text-xs text-ink-faint">
-            🍻 Beers revealed · <span className="text-ink-dim">Adj</span> = gross − beers (max
-            30), lowest wins.
+            🍻 Beers revealed · <span className="text-ink-dim">Adj</span> = gross − beers,
+            lowest wins.
           </p>
         ) : (
           <p className="text-center text-xs text-ink-faint">
