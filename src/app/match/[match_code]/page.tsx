@@ -117,15 +117,18 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
                 <th className="py-3 pl-3 pr-1 text-left">#</th>
                 <th className="px-1.5 py-3 text-left">Team</th>
                 <th className="px-1.5 py-3 text-center">Thru</th>
-                <th className="px-1.5 py-3 text-center">Par</th>
                 {everyoneFinished ? (
                   <>
+                    <th className="px-1.5 py-3 text-center">Par</th>
                     <th className="px-1.5 py-3 text-right">Gross</th>
                     <th className="px-1.5 py-3 text-right">🍺</th>
                     <th className="py-3 pl-1 pr-3 text-right">Adj</th>
                   </>
                 ) : (
-                  <th className="py-3 pl-1 pr-3 text-right">Gross</th>
+                  <>
+                    <th className="px-1.5 py-3 text-right">Gross</th>
+                    <th className="py-3 pl-1 pr-3 text-right">To Par</th>
+                  </>
                 )}
               </tr>
             </thead>
@@ -166,20 +169,20 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
                         <span className="tabular-nums text-ink-dim">{r.holesPlayed}</span>
                       )}
                     </td>
-                    <td
-                      className={
-                        'px-1.5 py-3 text-center font-display font-bold tabular-nums ' +
-                        (r.toPar == null
-                          ? 'text-ink-faint'
-                          : r.toPar <= 0
-                            ? 'text-mint'
-                            : 'text-coral')
-                      }
-                    >
-                      {formatToPar(r.toPar)}
-                    </td>
                     {everyoneFinished ? (
                       <>
+                        <td
+                          className={
+                            'px-1.5 py-3 text-center font-display font-bold tabular-nums ' +
+                            (r.toPar == null
+                              ? 'text-ink-faint'
+                              : r.toPar <= 0
+                                ? 'text-mint'
+                                : 'text-coral')
+                          }
+                        >
+                          {formatToPar(r.toPar)}
+                        </td>
                         <td className="px-1.5 py-3 text-right tabular-nums text-ink-dim">
                           {r.grossStrokes}
                         </td>
@@ -191,9 +194,23 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
                         </td>
                       </>
                     ) : (
-                      <td className="py-3 pl-1 pr-3 text-right font-display text-lg font-extrabold tabular-nums text-ink">
-                        {r.grossStrokes}
-                      </td>
+                      <>
+                        <td className="px-1.5 py-3 text-right tabular-nums text-ink-dim">
+                          {r.grossStrokes}
+                        </td>
+                        <td
+                          className={
+                            'py-3 pl-1 pr-3 text-right font-display text-lg font-extrabold tabular-nums ' +
+                            (r.toPar == null
+                              ? 'text-ink-faint'
+                              : r.toPar <= 0
+                                ? 'text-mint'
+                                : 'text-coral')
+                          }
+                        >
+                          {formatToPar(r.toPar)}
+                        </td>
+                      </>
                     )}
                   </tr>
                 );
@@ -211,7 +228,7 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
           </p>
         ) : (
           <p className="text-center text-xs text-ink-faint">
-            <span className="text-mint">Gross</span> = total strokes, lowest wins · 🔒 everyone&apos;s
+            Ranked by score <span className="text-mint">to par</span> (E beats +1) · 🔒 everyone&apos;s
             beers stay hidden until every team finishes.
           </p>
         ))}

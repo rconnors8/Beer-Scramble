@@ -114,27 +114,28 @@ describe('sortStandings', () => {
     ...over,
   });
 
-  it('orders by gross strokes ascending (lowest wins)', () => {
+  it('orders by score to par ascending — E beats +1, ignoring hole count', () => {
     const rows = sortStandings([
-      standing({ teamId: 'hi', grossStrokes: 50 }),
-      standing({ teamId: 'lo', grossStrokes: 40 }),
-      standing({ teamId: 'mid', grossStrokes: 45 }),
+      standing({ teamId: 'plus3', holesPlayed: 18, toPar: 3 }),
+      // even par but only 4 holes in — still ranks ahead of the +1 and +3 teams
+      standing({ teamId: 'even', holesPlayed: 4, toPar: 0 }),
+      standing({ teamId: 'plus1', holesPlayed: 18, toPar: 1 }),
     ]);
-    expect(rows.map((r) => r.teamId)).toEqual(['lo', 'mid', 'hi']);
+    expect(rows.map((r) => r.teamId)).toEqual(['even', 'plus1', 'plus3']);
   });
 
   it('sinks teams that have not teed off to the bottom', () => {
     const rows = sortStandings([
-      standing({ teamId: 'notStarted', holesPlayed: 0, finished: false, grossStrokes: 0 }),
-      standing({ teamId: 'playing', holesPlayed: 3, finished: false, grossStrokes: 12 }),
+      standing({ teamId: 'notStarted', holesPlayed: 0, finished: false, toPar: 0 }),
+      standing({ teamId: 'playing', holesPlayed: 3, finished: false, toPar: 5 }),
     ]);
     expect(rows.map((r) => r.teamId)).toEqual(['playing', 'notStarted']);
   });
 
-  it('breaks ties toward the team that has played more holes', () => {
+  it('breaks ties (same to par) toward the team that has played more holes', () => {
     const rows = sortStandings([
-      standing({ teamId: 'fewer', holesPlayed: 9, finished: false, grossStrokes: 30 }),
-      standing({ teamId: 'more', holesPlayed: 14, finished: false, grossStrokes: 30 }),
+      standing({ teamId: 'fewer', holesPlayed: 9, finished: false, toPar: 2 }),
+      standing({ teamId: 'more', holesPlayed: 14, finished: false, toPar: 2 }),
     ]);
     expect(rows.map((r) => r.teamId)).toEqual(['more', 'fewer']);
   });
