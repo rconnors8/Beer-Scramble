@@ -54,7 +54,10 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
         beers.filter((b) => b.team_id === t.id).length
       )
     );
-    setRows(sortStandings(standings));
+    // Once every team has finished, the match is over: rank by the beer-adjusted
+    // score (the real winner). During play, rank by gross with beers hidden.
+    const final = standings.length > 0 && standings.every((s) => s.finished);
+    setRows(sortStandings(standings, final));
     setReady(true);
   }, [code]);
 
@@ -115,7 +118,15 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
                 <th className="px-1.5 py-3 text-left">Team</th>
                 <th className="px-1.5 py-3 text-center">Thru</th>
                 <th className="px-1.5 py-3 text-center">Par</th>
-                <th className="py-3 pl-1 pr-3 text-right">Gross</th>
+                {everyoneFinished ? (
+                  <>
+                    <th className="px-1.5 py-3 text-right">Gross</th>
+                    <th className="px-1.5 py-3 text-right">🍺</th>
+                    <th className="py-3 pl-1 pr-3 text-right">Adj</th>
+                  </>
+                ) : (
+                  <th className="py-3 pl-1 pr-3 text-right">Gross</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -167,9 +178,23 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
                     >
                       {formatToPar(r.toPar)}
                     </td>
-                    <td className="py-3 pl-1 pr-3 text-right font-display text-lg font-extrabold tabular-nums text-ink">
-                      {r.grossStrokes}
-                    </td>
+                    {everyoneFinished ? (
+                      <>
+                        <td className="px-1.5 py-3 text-right tabular-nums text-ink-dim">
+                          {r.grossStrokes}
+                        </td>
+                        <td className="px-1.5 py-3 text-right tabular-nums text-amber">
+                          −{r.beers}
+                        </td>
+                        <td className="py-3 pl-1 pr-3 text-right font-display text-lg font-extrabold tabular-nums text-ink">
+                          {r.adjustedScore}
+                        </td>
+                      </>
+                    ) : (
+                      <td className="py-3 pl-1 pr-3 text-right font-display text-lg font-extrabold tabular-nums text-ink">
+                        {r.grossStrokes}
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -178,10 +203,18 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
         </div>
       )}
 
-      <p className="text-center text-xs text-ink-faint">
-        <span className="text-mint">Par</span> = over/under par so far ·{' '}
-        <span className="text-ink-dim">Gross</span> = total strokes, lowest wins.
-      </p>
+      {rows.length > 0 &&
+        (everyoneFinished ? (
+          <p className="text-center text-xs text-ink-faint">
+            🍻 Beers revealed · <span className="text-ink-dim">Adj</span> = gross − beers (max
+            30), lowest wins.
+          </p>
+        ) : (
+          <p className="text-center text-xs text-ink-faint">
+            <span className="text-mint">Gross</span> = total strokes, lowest wins · 🔒 everyone&apos;s
+            beers stay hidden until every team finishes.
+          </p>
+        ))}
 
       {session && (
         <Link

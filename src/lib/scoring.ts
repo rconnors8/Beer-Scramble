@@ -55,15 +55,19 @@ export function buildStanding(
 }
 
 /**
- * Sort by gross strokes ascending (lowest wins) — beers are tracked privately
- * per device and no longer affect the public standings. Teams that haven't teed
+ * Sort standings, lowest wins. During play we rank by gross strokes (beers stay
+ * hidden until every team finishes); once the match is over we rank by the
+ * beer-adjusted score, which decides the real winner. Teams that haven't teed
  * off sink to the bottom; ties break toward whoever has played more holes.
  */
-export function sortStandings(rows: TeamStanding[]): TeamStanding[] {
+export function sortStandings(rows: TeamStanding[], byAdjusted = false): TeamStanding[] {
   return [...rows].sort((a, b) => {
     if (a.holesPlayed === 0 && b.holesPlayed === 0) return 0;
     if (a.holesPlayed === 0) return 1;
     if (b.holesPlayed === 0) return -1;
-    return a.grossStrokes - b.grossStrokes || b.holesPlayed - a.holesPlayed;
+    const primary = byAdjusted
+      ? a.adjustedScore - b.adjustedScore
+      : a.grossStrokes - b.grossStrokes;
+    return primary || b.holesPlayed - a.holesPlayed;
   });
 }

@@ -139,6 +139,18 @@ describe('sortStandings', () => {
     expect(rows.map((r) => r.teamId)).toEqual(['more', 'fewer']);
   });
 
+  it('ranks by adjusted score when the match is final (byAdjusted)', () => {
+    // Lowest gross would be A, but beers flip the final order to B.
+    const rows = sortStandings(
+      [
+        standing({ teamId: 'A', grossStrokes: 80, beers: 2, adjustedScore: 78 }),
+        standing({ teamId: 'B', grossStrokes: 82, beers: 10, adjustedScore: 72 }),
+      ],
+      true
+    );
+    expect(rows.map((r) => r.teamId)).toEqual(['B', 'A']);
+  });
+
   it('does not mutate the input array', () => {
     const input = [
       standing({ teamId: 'b', adjustedScore: 2 }),
