@@ -53,14 +53,14 @@ export default function JoinPage({ params }: { params: { match_code: string } })
   }, [code, session, router]);
 
   const join = async () => {
-    if (!match || !teamName.trim()) return;
+    if (!match || !teamName.trim() || !membersLabel.trim()) return;
     setBusy(true);
     setError('');
     const { error } = await supabase.rpc('join_team', {
       p_match_id: match.id,
       p_team_name: teamName.trim(),
       p_start_nine: startNine,
-      p_members_label: membersLabel.trim() || null,
+      p_members_label: membersLabel.trim(),
     });
     setBusy(false);
     if (error) {
@@ -124,7 +124,7 @@ export default function JoinPage({ params }: { params: { match_code: string } })
       </label>
 
       <label className="flex flex-col gap-2">
-        <span className="eyebrow">Players (optional)</span>
+        <span className="eyebrow">Players</span>
         <input
           value={membersLabel}
           maxLength={60}
@@ -179,7 +179,7 @@ export default function JoinPage({ params }: { params: { match_code: string } })
       {error && <p className="text-sm text-coral">{error}</p>}
       <button
         onClick={join}
-        disabled={busy || !teamName.trim()}
+        disabled={busy || !teamName.trim() || !membersLabel.trim()}
         className="mt-1 rounded-2xl bg-mint px-5 py-4 font-display text-lg font-bold text-mint-ink shadow-glow transition active:scale-[0.99] disabled:opacity-40 disabled:shadow-none"
       >
         {busy ? 'Joining…' : 'Join match'}
