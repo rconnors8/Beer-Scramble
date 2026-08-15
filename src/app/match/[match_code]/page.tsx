@@ -54,10 +54,7 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
         beers.filter((b) => b.team_id === t.id).length
       )
     );
-    // Once every team has finished, the match is over: rank by the beer-adjusted
-    // score (the real winner). During play, rank by gross with beers hidden.
-    const final = standings.length > 0 && standings.every((s) => s.finished);
-    setRows(sortStandings(standings, final));
+    setRows(sortStandings(standings));
     setReady(true);
   }, [code]);
 
@@ -117,19 +114,9 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
                 <th className="py-3 pl-3 pr-1 text-left">#</th>
                 <th className="px-1.5 py-3 text-left">Team</th>
                 <th className="px-1.5 py-3 text-center">Thru</th>
-                {everyoneFinished ? (
-                  <>
-                    <th className="px-1.5 py-3 text-center">Par</th>
-                    <th className="px-1.5 py-3 text-right">Gross</th>
-                    <th className="px-1.5 py-3 text-right">🍺</th>
-                    <th className="py-3 pl-1 pr-3 text-right">Adj</th>
-                  </>
-                ) : (
-                  <>
-                    <th className="px-1.5 py-3 text-right">Gross</th>
-                    <th className="py-3 pl-1 pr-3 text-right">To Par</th>
-                  </>
-                )}
+                <th className="px-1.5 py-3 text-center">Par</th>
+                <th className="px-1.5 py-3 text-right">🍺</th>
+                <th className="py-3 pl-1 pr-3 text-right">Net</th>
               </tr>
             </thead>
             <tbody>
@@ -169,49 +156,33 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
                         <span className="tabular-nums text-ink-dim">{r.holesPlayed}</span>
                       )}
                     </td>
-                    {everyoneFinished ? (
-                      <>
-                        <td
-                          className={
-                            'px-1.5 py-3 text-center font-display font-bold tabular-nums ' +
-                            (r.toPar == null
-                              ? 'text-ink-faint'
-                              : r.toPar <= 0
-                                ? 'text-mint'
-                                : 'text-coral')
-                          }
-                        >
-                          {formatToPar(r.toPar)}
-                        </td>
-                        <td className="px-1.5 py-3 text-right tabular-nums text-ink-dim">
-                          {r.grossStrokes}
-                        </td>
-                        <td className="px-1.5 py-3 text-right tabular-nums text-amber">
-                          −{r.beers}
-                        </td>
-                        <td className="py-3 pl-1 pr-3 text-right font-display text-lg font-extrabold tabular-nums text-ink">
-                          {r.adjustedScore}
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="px-1.5 py-3 text-right tabular-nums text-ink-dim">
-                          {r.grossStrokes}
-                        </td>
-                        <td
-                          className={
-                            'py-3 pl-1 pr-3 text-right font-display text-lg font-extrabold tabular-nums ' +
-                            (r.toPar == null
-                              ? 'text-ink-faint'
-                              : r.toPar <= 0
-                                ? 'text-mint'
-                                : 'text-coral')
-                          }
-                        >
-                          {formatToPar(r.toPar)}
-                        </td>
-                      </>
-                    )}
+                    <td
+                      className={
+                        'px-1.5 py-3 text-center font-display font-bold tabular-nums ' +
+                        (r.toPar == null
+                          ? 'text-ink-faint'
+                          : r.toPar <= 0
+                            ? 'text-mint'
+                            : 'text-coral')
+                      }
+                    >
+                      {formatToPar(r.toPar)}
+                    </td>
+                    <td className="px-1.5 py-3 text-right tabular-nums text-amber">
+                      {r.beers}
+                    </td>
+                    <td
+                      className={
+                        'py-3 pl-1 pr-3 text-right font-display text-lg font-extrabold tabular-nums ' +
+                        (r.netToPar == null
+                          ? 'text-ink-faint'
+                          : r.netToPar <= 0
+                            ? 'text-mint'
+                            : 'text-coral')
+                      }
+                    >
+                      {formatToPar(r.netToPar)}
+                    </td>
                   </tr>
                 );
               })}
@@ -220,18 +191,11 @@ export default function LeaderboardPage({ params }: { params: { match_code: stri
         </div>
       )}
 
-      {rows.length > 0 &&
-        (everyoneFinished ? (
-          <p className="text-center text-xs text-ink-faint">
-            🍻 Beers revealed · <span className="text-ink-dim">Adj</span> = gross − beers,
-            lowest wins.
-          </p>
-        ) : (
-          <p className="text-center text-xs text-ink-faint">
-            Ranked by score <span className="text-mint">to par</span> (E beats +1) · 🔒 everyone&apos;s
-            beers stay hidden until every team finishes.
-          </p>
-        ))}
+      {rows.length > 0 && (
+        <p className="text-center text-xs text-ink-faint">
+          <span className="text-mint">Net</span> = score to par − beers, lowest wins.
+        </p>
+      )}
 
       {session && (
         <Link

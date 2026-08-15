@@ -12,13 +12,14 @@ export type TeamStanding = {
   grossStrokes: number;
   toPar: number | null; // gross − par over played holes; null if no starting nine
   beers: number; // total beers logged (no cap)
-  adjustedScore: number; // gross - beers (the metric that wins the league)
+  adjustedScore: number; // gross - beers (net strokes)
+  netToPar: number | null; // toPar − beers: net score to par (the ranking metric)
 };
 
 /**
- * Adjusted score = total strokes − total beers (unlimited) — still the winning
- * metric. To-par = gross strokes − par over the holes played, using the team's
- * starting nine to know each hole's par (standard golf; "E" at even).
+ * To-par = gross strokes − par over the holes played (standard golf; "E" at
+ * even). Net to par = to-par − beers: the beer-adjusted score expressed relative
+ * to par, which is what ranks the leaderboard (hole-count independent).
  */
 export function buildStanding(
   team: { id: string; team_name: string; members_label: string | null; start_nine: string | null },
@@ -51,25 +52,21 @@ export function buildStanding(
     toPar,
     beers,
     adjustedScore: grossStrokes - beers,
+    netToPar: toPar == null ? null : toPar - beers,
   };
 }
 
 /**
- * Sort standings, lowest wins. During play we rank by score to par (E beats +1),
- * regardless of how many holes each team has played; beers stay hidden until the
- * match ends. Once every team is finished we rank by the beer-adjusted score,
- * which decides the real winner. Teams that haven't teed off sink to the bottom;
- * ties break toward whoever has played more holes.
+ * Sort standings by net score to par (to-par − beers), lowest wins — E beats +1
+ * regardless of how many holes each team has played. Teams that haven't teed off
+ * sink to the bottom; ties break toward whoever has played more holes.
  */
-export function sortStandings(rows: TeamStanding[], byAdjusted = false): TeamStanding[] {
-  const parKey = (r: TeamStanding) => r.toPar ?? Number.POSITIVE_INFINITY;
+export function sortStandings(rows: TeamStanding[]): TeamStanding[] {
+  const netKey = (r: TeamStanding) => r.netToPar ?? Number.POSITIVE_INFINITY;
   return [...rows].sort((a, b) => {
     if (a.holesPlayed === 0 && b.holesPlayed === 0) return 0;
     if (a.holesPlayed === 0) return 1;
     if (b.holesPlayed === 0) return -1;
-    const primary = byAdjusted
-      ? a.adjustedScore - b.adjustedScore
-      : parKey(a) - parKey(b);
-    return primary || b.holesPlayed - a.holesPlayed;
+    return netKey(a) - netKey(b) || b.holesPlayed - a.holesPlayed;
   });
 }
